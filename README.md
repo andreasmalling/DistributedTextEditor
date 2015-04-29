@@ -18,4 +18,4 @@ In this exercise you have to code a very simple distributed editor. You are free
 7. Your report should contain instructions on how the TA can easily run a demo of your system.
 8. Your report should contain a link to the code of your system, and the code should be readable, commented and idiomatic.
 
-<div class="align-right">*Source: [dDist 2015](https://bb.au.dk/webapps/blackboard/execute/content/blankPage?cmd=view&content_id=_271630_1&course_id=_33604_1&mode=reset)*</div>
+*Source: [dDist 2015](https://bb.au.dk/webapps/blackboard/execute/content/blankPage?cmd=view&content_id=_271630_1&course_id=_33604_1&mode=reset)*
