@@ -1,5 +1,5 @@
 # Kør koden:
-1. Flyt filerne til `fh.cs.au.dk` og `ssh -X` ind på to forskellige maskiner.
+1. Flyt mappen *DistributedTextEditor* til `fh.cs.au.dk` og `ssh -X` ind på to forskellige maskiner.
 2. Naviger til mappen og kør `run.sh` på begge maskiner.
 3. Tryk `File>Listen` på den ene maskine, og noter IP samt port i titlen på vinduet.
 4. På den anden maskine skrives IP og port i input-felterne nederst i vinduet. Herefter trykkes der `File>Connect`.
@@ -17,3 +17,5 @@ In this exercise you have to code a very simple distributed editor. You are free
 6. Your report should describe how your system is designed and why it is an appropriate design. In describing the design of the system you should try to use as many relevant concepts from the course as possible.
 7. Your report should contain instructions on how the TA can easily run a demo of your system.
 8. Your report should contain a link to the code of your system, and the code should be readable, commented and idiomatic.
+
+<div class="align-right">*Source: [dDist 2015](https://bb.au.dk/webapps/blackboard/execute/content/blankPage?cmd=view&content_id=_271630_1&course_id=_33604_1&mode=reset)*</div>
