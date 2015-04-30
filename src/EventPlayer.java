@@ -1,7 +1,5 @@
 
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
@@ -20,8 +18,10 @@ public class EventPlayer implements Runnable {
         try {
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             while (running) {
-                MyTextEvent mte = dec.take(); // objectstream in.take i stedet
+                //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
+                MyTextEvent mte = dec.take();
                 out.writeObject(mte);
+                //If the MyTextEvent received is a DisconnectEvent, close the thread
                 if (mte instanceof DisconnectEvent) {
                     terminate();
                 }

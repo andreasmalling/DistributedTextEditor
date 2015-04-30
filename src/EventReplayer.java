@@ -64,9 +64,11 @@ public class EventReplayer implements Runnable {
                             });
                         } else if (mte instanceof DisconnectEvent) {
                             terminate();
+                            //The DisconnectEvent send first should make own client send a DisconnectEvent and then close itself
                             if(((DisconnectEvent) mte).shouldDisconnect()) {
                                 distributedTextEditor.disconnect();
                             }
+                            //Second and last DisconnectEvent should close socket
                             else socket.close();
                             break;
                         }

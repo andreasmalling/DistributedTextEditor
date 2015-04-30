@@ -13,8 +13,8 @@ public class DistributedTextEditor extends JFrame {
 
     private JTextArea area1 = new JTextArea(20,120);
     private JTextArea area2 = new JTextArea(20,120);
-    private JTextField ipaddress = new JTextField("localhost");
-    private JTextField portNumber = new JTextField("30000");
+    private JTextField ipaddress = new JTextField("Enter IP-address here");
+    private JTextField portNumber = new JTextField("Enter port number here");
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
@@ -22,12 +22,8 @@ public class DistributedTextEditor extends JFrame {
     private String currentFile = "Untitled";
     private boolean changed = false;
 
-    private Socket socket;
     private DocumentEventCapturer dec = new DocumentEventCapturer();
-    private Thread ert;
-    private Thread ept;
-    private EventReplayer er;
-    private EventPlayer ep;
+    private Socket socket;
     private ServerSocket serverSocket;
 
 
@@ -79,7 +75,7 @@ public class DistributedTextEditor extends JFrame {
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
 
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         pack();
         area1.addKeyListener(k1);
         setTitle("Disconnected");
@@ -98,66 +94,67 @@ public class DistributedTextEditor extends JFrame {
     };
 
     Action Listen = new AbstractAction("Listen") {
-
         public void actionPerformed(ActionEvent e) {
-            listenAction();
-        }
-    };
-
-    public void listenAction(){
-        saveOld();
-
-        area1.setText("");
-        changed = false;
-        Save.setEnabled(false);
-        SaveAs.setEnabled(false);
-
-        String address = null;
-        System.out.println("I am server fag");
-        try {
-            address = InetAddress.getLocalHost().getHostAddress();
-        }
-        catch (UnknownHostException e1) {
-            e1.printStackTrace();
-        }
-        int port = Integer.parseInt(portNumber.getText());
-        setTitle("I'm listening on "+address + ":" + port);
-
-        try {
-            serverSocket = new ServerSocket(port);
-            socket = serverSocket.accept();
-            serverSocket.close();
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-
-        establishConnection(socket, dec);
-        setTitle("Connected to: " + socket.getInetAddress().toString() + " " +  + socket.getPort());
-    }
-
-    Action Connect = new AbstractAction("Connect") {
-        public void actionPerformed(ActionEvent e) {
+            //Prepare editor for connection
             saveOld();
             area1.setText("");
             changed = false;
             Save.setEnabled(false);
             SaveAs.setEnabled(false);
 
+            //Get own address for hosting
+            String address = null;
+            try {
+                address = InetAddress.getLocalHost().getHostAddress();
+            }
+            catch (UnknownHostException e1) {
+                e1.printStackTrace();
+            }
+            int port = Integer.parseInt(portNumber.getText());
+            setTitle("I'm listening on "+address + ":" + port);
+
+            //Create server socket and listen until another DistributedTextEditor connects
+            try {
+                serverSocket = new ServerSocket(port);
+                socket = serverSocket.accept();
+                serverSocket.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            //Create threads for sending and receiving text
+            establishConnection(socket, dec);
+            setTitle("Connected to " + socket.getInetAddress().toString() + ":" +  + socket.getPort());
+        }
+    };
+
+    Action Connect = new AbstractAction("Connect") {
+        public void actionPerformed(ActionEvent e) {
+            //Prepare editor for connection
+            saveOld();
+            area1.setText("");
+            changed = false;
+            Save.setEnabled(false);
+            SaveAs.setEnabled(false);
+
+            //Connect with a listening DistributedTextEditor
             String address = ipaddress.getText();
             int port = Integer.parseInt(portNumber.getText());
-            setTitle("Connecting to " + address +" "+ port + "...");
+            setTitle("Connecting to " + address +":"+ port + "...");
 
+            //Create socket for connection with a listening DistributedTextEditor
             try{
                 socket = new Socket(address, port);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
+            //Create threads for sending and receiving text
             establishConnection(socket, dec);
-            setTitle("Connected to: " + address + " " + port);
+            setTitle("Connected to " + address + ":" + port);
 
         }
     };
 
+    //Disconnect method for this DistributedTextEditor
     Action Disconnect = new AbstractAction("Disconnect") {
         public void actionPerformed(ActionEvent e) {
             try {
@@ -173,8 +170,8 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
+    //Disconnect method for the connected DistributedTextEditor
     public void disconnect(){
-
         try {
             dec.eventHistory.put(new DisconnectEvent(0));
         } catch (InterruptedException e1) {
@@ -208,7 +205,6 @@ public class DistributedTextEditor extends JFrame {
     };
 
     ActionMap m = area1.getActionMap();
-
     Action Copy = m.get(DefaultEditorKit.copyAction);
     Action Paste = m.get(DefaultEditorKit.pasteAction);
 
@@ -237,13 +233,12 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
-        er = new EventReplayer(socket, area2, this);
-        ert = new Thread(er);
+        EventReplayer er = new EventReplayer(socket, area2, this);
+        Thread ert = new Thread(er);
         ert.start();
         EventPlayer ep = new EventPlayer(socket, dec);
-        ept = new Thread(ep);
+        Thread ept = new Thread(ep);
         ept.start();
     }
     public static void main(String[] arg) {
