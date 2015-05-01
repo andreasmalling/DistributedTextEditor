@@ -6,7 +6,12 @@
 5. Efter et kort øjeblik er forbindelsen oprettet, og der kan nu indtastes i det øverste tekstfelt på begge maskiner.
 6. Tryk på `File>Disconnect` på en hvilken som helst maskine for at afbryde forbindelsen, og gå tilbage til start-tilstanden.
 
-# Exercise 9 (Hand-in) (2015)
+# Exercises (2015)
+In this exercise you get to show that you can use concepts from the course to designed a complicated distributed system. This is one of the main learning goals of the course. To have reached this learning goal at the time of this exercise it is important that you keep up to date with reading the book and solving the exercises. Recall that the quality of your report will be reflected in your final grade and that there are no rehandins or late handins.
+
+*Source: [dDist 2015](https://bb.au.dk/webapps/blackboard/execute/content/blankPage?cmd=view&content_id=_271630_1&course_id=_33604_1&mode=reset)*
+
+## Exercise 9 (Hand-in)
 In this exercise you have to code a very simple distributed editor. You are free to code it from scratch or modify the code from Exercise 3. Your editor should have these capabilities:
 
 1. If a DistributedTextEditor has the menu item Listen fired, then it will become a TCP/IP server listening for connections on some incoming port of your choice. You might use the one in the text field saying "Port number here" if there is a port number in that field, but you don't have to. However, you must write the IP address and the port number of the server in the title of the window. You might be inspired by the DDistDemoServer from Exercise 2. Your report should include the code that you added for implementing this, including a description of where you added the code, and why.
@@ -18,4 +23,26 @@ In this exercise you have to code a very simple distributed editor. You are free
 7. Your report should contain instructions on how the TA can easily run a demo of your system.
 8. Your report should contain a link to the code of your system, and the code should be readable, commented and idiomatic.
 
-*Source: [dDist 2015](https://bb.au.dk/webapps/blackboard/execute/content/blankPage?cmd=view&content_id=_271630_1&course_id=_33604_1&mode=reset)*
+## Exercise 11 (Hand-in)
+In this exercise you are to extend the editor from Exercise 9 such that the server and the client are editing the same text. This text should appear in the top text area in the client and the server. You can leave the bottom text area empty, or use it for debugging messages or whatever you want. I can also remove it if you have no use for it. In more details:
+
+1. If first the user of the server, from now on called Server, does some edit (typing or deleting) and then after a while the user of the client, from now on called Client, does an edit, then Client should see a document reflecting the edits of Server when the Client does her edits and the edits of the Client should later be reflected in the document of Server.
+2. It ought to be the case that simulataneous edits by Client and Server in different regions produce intuitive results. If, e.g., Client is typing at the top and at the same time Server is typing at the bottom, then the result ought to be as if first Client had typed and then Server had typed. If the typings of Server are garbled, like the words occuring reversed, the system is not behaving as it ought.
+3. Client and Server should be able to edit at any points in the document, and not just at the top or bottom. It is acceptable, however, if the result of edits at the same point in the document, or very close to each other, does not produce an intuitive result, but it is very good if you try to handle as many conflicts as you can. In getting simultaneous edits to work in an intuitive way, it is helpful to have a notion of which edits are concurrent and which are dependent. When Server types a key at the bottom and Client types a key at the top around the same time, then it matters for what should happen whether Server's buffer reflected the typing of Client when Server typed the key or whether Client's buffer reflected the typing of Server when Client typed the key, or whether the keys where typed by Client and Server so close in time that neither saw the effect of the typing of the other before typing its own key.
+4. It is tolerable that your system has a little lack between typing and the text occuring. However, it is very good if this is not the case, i.e., if you can make it appear to the users almost as if they were typing a local text area.
+5. If you add any extra features to the system, this should be highlighted in the report. This, however, is not needed, not even for a high grading. There is plenty of work in getting the simultaneous typing to work reasonably.
+6. Your report should describe how your system is designed and why it is an appropriate design. In describing the design of the system you should try to use as many relevant concepts from the course as possible.
+7. Your report should contain instructions on how the TA can easily run a demo of your system.
+8. Your report should contain a link to the code of your system, and the code should be readable, commented and idiomatic.
+
+## Exercise 12 (Hand-in)
+In this exercise you are to extend the editor from Exercise 11 such that more than two peers can edit the same text. This text should appear in the top text area at all peers. You can leave the bottom text area empty, or use it for debugging messages or whatever you want. You can also remove it if you have no use for it. In more details:
+
+1. For two peers the system works as in Exercise 11. However, when a system is up and running, then at any time a new client can contact any of the existing peers and get added to the editing. When this happens the new peer should at some point see the same text as the other peers and should be able to edit the text too.
+2. It ought to be the case that simulataneous edits by several peers in different regions produce intuitive results. It is, however, ok if you can only handle a limited number of simultaneous edits. However, it is important that even if unintuitive results are produce, the peers should never end up with different version of the document.
+3. It is also tolerable that your system has a little lack between typing and the text occuring. However, it is very good if this is not the case, i.e., if you can make it appear to the users almost as if they were typing a local text area.
+4. Any peer should be able to leave (disconnect) at any point during the editing, and soon after that the correct operation of the system should not depend on the computer of the peer that left still operating. It is good enough if peers entering and leaving gives some detail in the editing, but it is very good if you can make it appear seamless. That a peer leaves should not change the document. The changes done by that peer should still be reflected. Notice that if several peers connect and disconnect, it might end up that the peers editing a document are disjoint from the peers starting it.
+5. If you add any extra features to the system, this should be highlighted in the report. This, however, is not needed, not even for a high grading. There is plenty of work in getting the simultaneous typing to work reasonably and to get the connecting and disconnecting to work.
+6. Your report should describe how your system is designed and why it is an appropriate design. In describing the design of the system you should try to use as many relevant concepts from the course as possible.
+7. Your report should contain instructions on how the TA can easily run a demo of your system.
+8. Your report should contain a link to the code of your system, and the code should be readable, commented and idiomatic.
