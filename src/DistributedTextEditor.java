@@ -12,9 +12,8 @@ import java.net.UnknownHostException;
 public class DistributedTextEditor extends JFrame {
 
     private JTextArea area1 = new JTextArea(20,120);
-    private JTextArea area2 = new JTextArea(20,120);
-    private JTextField ipaddress = new JTextField("Enter IP-address here");
-    private JTextField portNumber = new JTextField("Enter port number here");
+    private JTextField ipaddress = new JTextField("localhost");
+    private JTextField portNumber = new JTextField("43921");
 
     private JFileChooser dialog =
             new JFileChooser(System.getProperty("user.dir"));
@@ -29,10 +28,7 @@ public class DistributedTextEditor extends JFrame {
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
-
-        area2.setFont(new Font("Monospaced",Font.PLAIN,12));
         ((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
-        area2.setEditable(false);
 
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
@@ -42,12 +38,6 @@ public class DistributedTextEditor extends JFrame {
                         JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                         JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         content.add(scroll1,BorderLayout.CENTER);
-
-        JScrollPane scroll2 =
-                new JScrollPane(area2,
-                        JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                        JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        content.add(scroll2,BorderLayout.CENTER);
 
         content.add(ipaddress,BorderLayout.CENTER);
         content.add(portNumber,BorderLayout.CENTER);
@@ -90,6 +80,7 @@ public class DistributedTextEditor extends JFrame {
             changed = true;
             Save.setEnabled(true);
             SaveAs.setEnabled(true);
+            dec.toggleMakeEvents(true);
         }
     };
 
@@ -165,8 +156,6 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Disconnected");
-            area1.setText("");
-            area2.setText("");
         }
     };
 
@@ -178,8 +167,6 @@ public class DistributedTextEditor extends JFrame {
             e1.printStackTrace();
         }
         setTitle("Disconnected");
-        area1.setText("");
-        area2.setText("");
     }
 
     Action Save = new AbstractAction("Save") {
@@ -234,7 +221,7 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
-        EventReplayer er = new EventReplayer(socket, area2, this);
+        EventReplayer er = new EventReplayer(socket, area1, this);
         Thread ert = new Thread(er);
         ert.start();
         EventPlayer ep = new EventPlayer(socket, dec);
