@@ -4,6 +4,7 @@ import java.awt.EventQueue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  *
@@ -21,6 +22,7 @@ public class EventReplayer implements Runnable {
     private JTextArea area;
     private boolean running = true;
 
+
     public EventReplayer(Socket socket, JTextArea area, DistributedTextEditor distributedTextEditor) {
         this.area = area;
         this.socket = socket;
@@ -34,6 +36,24 @@ public class EventReplayer implements Runnable {
                 MyTextEvent mte = null;
                 try {
                     while ((mte = (MyTextEvent) in.readObject()) != null) {
+                        //Receive(msg)
+                        //Discard acknowledged messages
+                        ArrayList<MyTextEvent> outgoing = distributedTextEditor.getOutgoingQueue();
+                        for(MyTextEvent m : outgoing){
+                            if(m.getLocalTime() < mte.getOtherTime()){
+                                outgoing.remove(m);
+                            }
+                        }
+                        //ASSERT msg.myMsgs == otherMsgs
+                        for (int i = 0; i < outgoing.size(); i++){
+                            //Transform new message and the ones in the queue
+                            //{msg, outgoing[i]} = xform(msg, outgoing[i]);
+                            MyTextEvent[] xformed = Transformer.xform(mte, outgoing.get(i));
+                            mte = xformed[0];
+                            outgoing.set(i, xformed[1]);
+                        }
+                        distributedTextEditor.incOtherMsgs();
+
                         if (mte instanceof TextInsertEvent) {
                             final TextInsertEvent tie = (TextInsertEvent) mte;
                             EventQueue.invokeLater(new Runnable() {

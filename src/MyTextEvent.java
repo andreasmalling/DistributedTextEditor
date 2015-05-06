@@ -10,5 +10,23 @@ public class MyTextEvent implements Serializable{
         this.offset = offset;
     }
     private int offset;
+    private int localTime;
+    private int otherTime;
     int getOffset() { return offset; }
+
+    public int getLocalTime() {
+        return localTime;
+    }
+
+    public void setLocalTime(int localTime) {
+        this.localTime = localTime;
+    }
+
+    public int getOtherTime() {
+        return otherTime;
+    }
+
+    public void setOtherTime(int otherTime) {
+        this.otherTime = otherTime;
+    }
 }

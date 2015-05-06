@@ -8,6 +8,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 public class DistributedTextEditor extends JFrame {
 
@@ -25,6 +26,10 @@ public class DistributedTextEditor extends JFrame {
     private Socket socket;
     private ServerSocket serverSocket;
 
+    //For jupiter-synchronization
+    private int myMsgs = 0; /** number of messages generated */
+    private int otherMsgs = 0; /** number of messages received */
+    private ArrayList<MyTextEvent> outgoing = new ArrayList<>();
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -192,9 +197,9 @@ public class DistributedTextEditor extends JFrame {
     };
 
     ActionMap m = area1.getActionMap();
+
     Action Copy = m.get(DefaultEditorKit.copyAction);
     Action Paste = m.get(DefaultEditorKit.pasteAction);
-
     private void saveFileAs() {
         if(dialog.showSaveDialog(null)==JFileChooser.APPROVE_OPTION)
             saveFile(dialog.getSelectedFile().getAbsolutePath());
@@ -221,13 +226,36 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
+
         EventReplayer er = new EventReplayer(socket, area1, this);
         Thread ert = new Thread(er);
         ert.start();
-        EventPlayer ep = new EventPlayer(socket, dec);
+
+        EventPlayer ep = new EventPlayer(socket, dec, this);
         Thread ept = new Thread(ep);
         ept.start();
     }
+
+    public int getMyMsgs() {
+        return myMsgs;
+    }
+
+    public void incMyMsgs() {
+        myMsgs++;
+    }
+
+    public int getOtherMsgs() {
+        return otherMsgs;
+    }
+
+    public void incOtherMsgs() {
+        otherMsgs++;
+    }
+
+    public ArrayList<MyTextEvent> getOutgoingQueue() {
+        return outgoing;
+    }
+
     public static void main(String[] arg) {
         new DistributedTextEditor();
     }
