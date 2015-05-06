@@ -67,7 +67,7 @@ public class Transformer {
 
     private static MyTextEvent[] insertRemove(TextInsertEvent receivedIns, TextRemoveEvent localRem){
         if (receivedIns.getOffset() >= localRem.getOffset() ) {
-            receivedIns = new TextInsertEvent(receivedIns.getOffset() + localRem.getLength(), receivedIns.getText());
+            receivedIns = new TextInsertEvent(receivedIns.getOffset() - localRem.getLength(), receivedIns.getText());
         }
         else if (receivedIns.getOffset() < localRem.getOffset() ) {
             localRem = new TextRemoveEvent(localRem.getOffset() + receivedIns.getText().length(), localRem.getLength());
@@ -83,7 +83,7 @@ public class Transformer {
             receivedRem = new TextRemoveEvent(receivedRem.getOffset() + localIns.getText().length(), receivedRem.getLength());
         }
         else if (receivedRem.getOffset() < localIns.getOffset() ) {
-            localIns = new TextInsertEvent(localIns.getOffset() + receivedRem.getLength(), localIns.getText());
+            localIns = new TextInsertEvent(localIns.getOffset() - receivedRem.getLength(), localIns.getText());
         }
         //else{ så er offsets lig hinanden. Hvem skal så vinde? Vi skal favorisere en af dem
         pair[0] = receivedRem;

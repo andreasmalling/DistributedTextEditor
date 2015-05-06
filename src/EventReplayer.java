@@ -4,7 +4,7 @@ import java.awt.EventQueue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  *
@@ -38,7 +38,7 @@ public class EventReplayer implements Runnable {
                     while ((mte = (MyTextEvent) in.readObject()) != null) {
                         //Receive(msg)
                         //Discard acknowledged messages
-                        ArrayList<MyTextEvent> outgoing = distributedTextEditor.getOutgoingQueue();
+                        CopyOnWriteArrayList<MyTextEvent> outgoing = distributedTextEditor.getOutgoingQueue();
                         for(MyTextEvent m : outgoing){
                             if(m.getLocalTime() < mte.getOtherTime()){
                                 outgoing.remove(m);

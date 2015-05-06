@@ -8,7 +8,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DistributedTextEditor extends JFrame {
 
@@ -29,7 +29,7 @@ public class DistributedTextEditor extends JFrame {
     //For jupiter-synchronization
     private int myMsgs = 0; /** number of messages generated */
     private int otherMsgs = 0; /** number of messages received */
-    private ArrayList<MyTextEvent> outgoing = new ArrayList<>();
+    private CopyOnWriteArrayList<MyTextEvent> outgoing = new CopyOnWriteArrayList<>();
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -252,7 +252,7 @@ public class DistributedTextEditor extends JFrame {
         otherMsgs++;
     }
 
-    public ArrayList<MyTextEvent> getOutgoingQueue() {
+    public CopyOnWriteArrayList<MyTextEvent> getOutgoingQueue() {
         return outgoing;
     }
 
