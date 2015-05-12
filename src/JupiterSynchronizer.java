@@ -26,8 +26,9 @@ public class JupiterSynchronizer {
         //Receive(msg)
         //Discard acknowledged messages
         while (iterator.hasNext()){
-            if (iterator.next().getLocalTime() < mte.getOtherTime()){
-                deletionArray.add(iterator.next());
+            MyTextEvent m = iterator.next();
+            if (m.getLocalTime() < mte.getOtherTime()){
+                deletionArray.add(m);
             }
         }
         outgoing.removeAll(deletionArray);
