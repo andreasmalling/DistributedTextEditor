@@ -26,11 +26,6 @@ public class DistributedTextEditor extends JFrame {
     private Socket socket;
     private ServerSocket serverSocket;
 
-    //For jupiter-synchronization
-    private int myMsgs = 0; /** number of messages generated */
-    private int otherMsgs = 0; /** number of messages received */
-    private CopyOnWriteArrayList<MyTextEvent> outgoing = new CopyOnWriteArrayList<>();
-
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
         ((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
@@ -227,37 +222,16 @@ public class DistributedTextEditor extends JFrame {
 
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
         //give threads a number, so we know which was first (most important)
-        int id = 0;
+        int id = (int) (100 * Math.random());
+        JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
-        EventReplayer er = new EventReplayer(socket, area1, this);
+        EventReplayer er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
         Thread ert = new Thread(er);
         ert.start();
 
-        EventPlayer ep = new EventPlayer(socket, dec, this, id);
+        EventPlayer ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
         Thread ept = new Thread(ep);
         ept.start();
-
-        id++;
-    }
-
-    public int getMyMsgs() {
-        return myMsgs;
-    }
-
-    public void incMyMsgs() {
-        myMsgs++;
-    }
-
-    public int getOtherMsgs() {
-        return otherMsgs;
-    }
-
-    public void incOtherMsgs() {
-        otherMsgs++;
-    }
-
-    public CopyOnWriteArrayList<MyTextEvent> getOutgoingQueue() {
-        return outgoing;
     }
 
     public static void main(String[] arg) {

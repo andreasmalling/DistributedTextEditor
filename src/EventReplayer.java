@@ -17,16 +17,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class EventReplayer implements Runnable {
 
+    private JupiterSynchronizer jupiterSynchronizer;
     private DistributedTextEditor distributedTextEditor;
     private Socket socket;
     private JTextArea area;
     private boolean running = true;
 
 
-    public EventReplayer(Socket socket, JTextArea area, DistributedTextEditor distributedTextEditor) {
+    public EventReplayer(Socket socket, JTextArea area, DistributedTextEditor distributedTextEditor, JupiterSynchronizer jupiterSynchronizer) {
         this.area = area;
         this.socket = socket;
         this.distributedTextEditor = distributedTextEditor;
+        this.jupiterSynchronizer = jupiterSynchronizer;
     }
 
     public void run() {
@@ -36,24 +38,7 @@ public class EventReplayer implements Runnable {
                 MyTextEvent mte = null;
                 try {
                     while ((mte = (MyTextEvent) in.readObject()) != null) {
-                        //Receive(msg)
-                        //Discard acknowledged messages
-                        CopyOnWriteArrayList<MyTextEvent> outgoing = distributedTextEditor.getOutgoingQueue();
-                        for(MyTextEvent m : outgoing){
-                            if(m.getLocalTime() < mte.getOtherTime()){
-                                outgoing.remove(m);
-                            }
-                        }
-                        //ASSERT msg.myMsgs == otherMsgs
-                        for (int i = 0; i < outgoing.size(); i++){
-                            //Transform new message and the ones in the queue
-                            //{msg, outgoing[i]} = xform(msg, outgoing[i]);
-                            MyTextEvent[] xformed = Transformer.xform(mte, outgoing.get(i));
-                            mte = xformed[0];
-                            outgoing.set(i, xformed[1]);
-                        }
-                        distributedTextEditor.incOtherMsgs();
-
+                        mte = jupiterSynchronizer.receive(mte);
                         if (mte instanceof TextInsertEvent) {
                             final TextInsertEvent tie = (TextInsertEvent) mte;
                             EventQueue.invokeLater(new Runnable() {

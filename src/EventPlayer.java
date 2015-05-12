@@ -5,17 +5,19 @@ import java.net.Socket;
 
 public class EventPlayer implements Runnable {
 
+    private JupiterSynchronizer jupiterSynchronizer;
     private int id;
     private DistributedTextEditor distributedTextEditor;
     private Socket socket;
     private DocumentEventCapturer dec;
     private boolean running = true;
 
-    public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor, int id) {
+    public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor, int id, JupiterSynchronizer jupiterSynchronizer) {
         this.dec = dec;
         this.socket = socket;
         this.distributedTextEditor = distributedTextEditor;
         this.id = id;
+        this.jupiterSynchronizer = jupiterSynchronizer;
     }
 
     public void run() {
@@ -23,14 +25,10 @@ public class EventPlayer implements Runnable {
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             while (running) {
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
-                //Generate(op)
                 MyTextEvent mte = dec.take();
-                mte.setLocalTime(distributedTextEditor.getMyMsgs());
-                mte.setOtherTime(distributedTextEditor.getOtherMsgs());
+                mte = jupiterSynchronizer.generate(mte);
                 mte.setId(id);
                 out.writeObject(mte);
-                distributedTextEditor.getOutgoingQueue().add(mte);
-                distributedTextEditor.incMyMsgs();
                 //If the MyTextEvent received is a DisconnectEvent, close the thread
                 if (mte instanceof DisconnectEvent) {
                     terminate();
