@@ -26,6 +26,8 @@ public class DistributedTextEditor extends JFrame {
     private Socket socket;
     private ServerSocket serverSocket;
 
+    JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
+
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
         ((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
@@ -156,6 +158,7 @@ public class DistributedTextEditor extends JFrame {
                 e1.printStackTrace();
             }
             setTitle("Disconnected");
+            jupiterSynchronizer.clear();
         }
     };
 
@@ -167,6 +170,7 @@ public class DistributedTextEditor extends JFrame {
             e1.printStackTrace();
         }
         setTitle("Disconnected");
+        jupiterSynchronizer.clear();
     }
 
     Action Save = new AbstractAction("Save") {
@@ -223,7 +227,6 @@ public class DistributedTextEditor extends JFrame {
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
         //give threads a number, so we know which was first (most important)
         int id = (int) (100 * Math.random());
-        JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
         EventReplayer er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
         Thread ert = new Thread(er);

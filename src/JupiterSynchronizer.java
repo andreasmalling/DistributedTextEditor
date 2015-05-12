@@ -46,4 +46,8 @@ public class JupiterSynchronizer {
         return mte;
     }
 
+    public void clear(){
+        outgoing.clear();
+    }
+
 }
