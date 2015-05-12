@@ -1,11 +1,12 @@
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Created by Kresten on 12-05-2015.
  */
 public class JupiterSynchronizer {
 
-    private ArrayList<MyTextEvent> outgoing = new ArrayList<>();
+    private CopyOnWriteArrayList<MyTextEvent> outgoing = new CopyOnWriteArrayList<>();
     private int myMsgs = 0; /** number of messages generated */
     private int otherMsgs = 0; /** number of messages received */
 
@@ -20,20 +21,23 @@ public class JupiterSynchronizer {
 
     public synchronized MyTextEvent receive(MyTextEvent mte){
 
+        Iterator<MyTextEvent> iterator = outgoing.iterator();
         //Receive(msg)
         //Discard acknowledged messages
-        for(MyTextEvent m : outgoing){
-            if(m.getLocalTime() < mte.getOtherTime()){
-                outgoing.remove(m);
+        while (iterator.hasNext()){
+            if (iterator.next().getLocalTime() < mte.getOtherTime()){
+                iterator.remove();
             }
         }
         //ASSERT msg.myMsgs == otherMsgs
-        for (int i = 0; i < outgoing.size(); i++){
+        int i = 0;
+        while (iterator.hasNext()){
             //Transform new message and the ones in the queue
             //{msg, outgoing[i]} = xform(msg, outgoing[i]);
-            MyTextEvent[] xformed = Transformer.xform(mte, outgoing.get(i));
+            MyTextEvent[] xformed = Transformer.xform(mte, iterator.next());
             mte = xformed[0];
             outgoing.set(i, xformed[1]);
+            i++;
         }
         otherMsgs++;
         return mte;
