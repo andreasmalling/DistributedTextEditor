@@ -5,15 +5,17 @@ import java.net.Socket;
 
 public class EventPlayer implements Runnable {
 
+    private int id;
     private DistributedTextEditor distributedTextEditor;
     private Socket socket;
     private DocumentEventCapturer dec;
     private boolean running = true;
 
-    public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor) {
+    public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor, int id) {
         this.dec = dec;
         this.socket = socket;
         this.distributedTextEditor = distributedTextEditor;
+        this.id = id;
     }
 
     public void run() {
@@ -25,6 +27,7 @@ public class EventPlayer implements Runnable {
                 MyTextEvent mte = dec.take();
                 mte.setLocalTime(distributedTextEditor.getMyMsgs());
                 mte.setOtherTime(distributedTextEditor.getOtherMsgs());
+                mte.setId(id);
                 out.writeObject(mte);
                 distributedTextEditor.getOutgoingQueue().add(mte);
                 distributedTextEditor.incMyMsgs();

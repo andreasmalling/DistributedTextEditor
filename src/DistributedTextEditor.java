@@ -226,14 +226,18 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
+        //give threads a number, so we know which was first (most important)
+        int id = 0;
 
         EventReplayer er = new EventReplayer(socket, area1, this);
         Thread ert = new Thread(er);
         ert.start();
 
-        EventPlayer ep = new EventPlayer(socket, dec, this);
+        EventPlayer ep = new EventPlayer(socket, dec, this, id);
         Thread ept = new Thread(ep);
         ept.start();
+
+        id++;
     }
 
     public int getMyMsgs() {

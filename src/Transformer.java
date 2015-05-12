@@ -36,11 +36,9 @@ public class Transformer {
         else if (receivedIns.getOffset() < localIns.getOffset() ) {
             localIns = new TextInsertEvent(localIns.getOffset() + receivedIns.getText().length(), localIns.getText());
         }
-        //else{ så er offsets lig hinanden. Hvem skal så vinde? Vi skal favorisere en af dem }
-        //hvis received vinder:     localIns = new TextInsertEvent(localIns.getOffset() + receivedIns.getText().length(), localIns.getText());
-        //hvis local vinder:        receivedIns = new TextInsertEvent(receivedIns.getOffset() + localIns.getText().length(), receivedIns.getText());
-        else{
-            if(true){
+
+        else{ //receivedIns.getOffset() == localIns.getOffset()
+            if(receivedIns.getId()<localIns.getId()){
                 localIns = new TextInsertEvent(localIns.getOffset() + receivedIns.getText().length(), localIns.getText());
             }
             else{
@@ -54,25 +52,41 @@ public class Transformer {
 
     private static MyTextEvent[] removeRemove(TextRemoveEvent receivedRem, TextRemoveEvent localRem){
         if (receivedRem.getOffset() > localRem.getOffset() ) {
-            receivedRem = new TextRemoveEvent(receivedRem.getOffset() - localRem.getLength(), receivedRem.getLength());
+            if(localRem.getOffset()+localRem.getLength() >= receivedRem.getOffset()){
+                if(localRem.getOffset()+localRem.getLength() >= receivedRem.getOffset()+receivedRem.getLength()){
+                    receivedRem = new TextRemoveEvent(0,0);
+                }
+                else localRem = new TextRemoveEvent(localRem.getOffset(),receivedRem.getOffset()+receivedRem.getLength()-localRem.getOffset());
+            }
+            else receivedRem = new TextRemoveEvent(receivedRem.getOffset() - localRem.getLength(), receivedRem.getLength());
         }
         else if (receivedRem.getOffset() < localRem.getOffset() ) {
-            localRem = new TextRemoveEvent(localRem.getOffset() - receivedRem.getLength(), localRem.getLength());
+            if(receivedRem.getOffset()+receivedRem.getLength() >= localRem.getOffset()){
+                if(receivedRem.getOffset()+receivedRem.getLength() >= localRem.getOffset()+localRem.getLength()){
+                    localRem = new TextRemoveEvent(0,0);
+                }
+                else receivedRem = new TextRemoveEvent(receivedRem.getOffset(),localRem.getOffset()+localRem.getLength()-receivedRem.getOffset());
+            }
+            else localRem = new TextRemoveEvent(localRem.getOffset() - receivedRem.getLength(), localRem.getLength());
         }
-        //else{ så er offsets lig hinanden. Hvem skal så vinde? Vi skal favorisere en af dem
+        else{
+            if(receivedRem.getOffset() + receivedRem.getLength() >= localRem.getOffset()+localRem.getLength()){
+                localRem = new TextRemoveEvent(0,0);
+            }
+            else receivedRem = new TextRemoveEvent(0,0);
+        }
         pair[0] = receivedRem;
         pair[1] = localRem;
         return pair;
     }
 
     private static MyTextEvent[] insertRemove(TextInsertEvent receivedIns, TextRemoveEvent localRem){
-        if (receivedIns.getOffset() >= localRem.getOffset() ) {
+        if (receivedIns.getOffset() > localRem.getOffset() ) {
             receivedIns = new TextInsertEvent(receivedIns.getOffset() - localRem.getLength(), receivedIns.getText());
         }
-        else if (receivedIns.getOffset() < localRem.getOffset() ) {
+        else if (receivedIns.getOffset() <= localRem.getOffset()) {
             localRem = new TextRemoveEvent(localRem.getOffset() + receivedIns.getText().length(), localRem.getLength());
         }
-        //else{ så er offsets lig hinanden. Hvem skal så vinde? Vi skal favorisere en af dem
         pair[0] = receivedIns;
         pair[1] = localRem;
         return pair;
@@ -85,7 +99,6 @@ public class Transformer {
         else if (receivedRem.getOffset() < localIns.getOffset() ) {
             localIns = new TextInsertEvent(localIns.getOffset() - receivedRem.getLength(), localIns.getText());
         }
-        //else{ så er offsets lig hinanden. Hvem skal så vinde? Vi skal favorisere en af dem
         pair[0] = receivedRem;
         pair[1] = localIns;
         return pair;
