@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -20,15 +21,16 @@ public class JupiterSynchronizer {
     }
 
     public synchronized MyTextEvent receive(MyTextEvent mte){
-
         Iterator<MyTextEvent> iterator = outgoing.iterator();
+        ArrayList<MyTextEvent> deletionArray = new ArrayList<>();
         //Receive(msg)
         //Discard acknowledged messages
         while (iterator.hasNext()){
             if (iterator.next().getLocalTime() < mte.getOtherTime()){
-                iterator.remove();
+                deletionArray.add(iterator.next());
             }
         }
+        outgoing.removeAll(deletionArray);
         //ASSERT msg.myMsgs == otherMsgs
         int i = 0;
         while (iterator.hasNext()){
