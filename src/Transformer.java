@@ -82,7 +82,12 @@ public class Transformer {
 
     private static MyTextEvent[] insertRemove(TextInsertEvent receivedIns, TextRemoveEvent localRem){
         if (receivedIns.getOffset() > localRem.getOffset() ) {
-            receivedIns = new TextInsertEvent(receivedIns.getOffset() - localRem.getLength(), receivedIns.getText());
+            //if we insert into a section getting removed, we move insert before the remove, and remove after it
+            if(receivedIns.getOffset() < localRem.getOffset() + localRem.getLength()){
+                receivedIns = new TextInsertEvent(localRem.getOffset(), receivedIns.getText());
+                localRem = new TextRemoveEvent(localRem.getOffset() + receivedIns.getText().length(), localRem.getLength());
+            }
+            else receivedIns = new TextInsertEvent(receivedIns.getOffset() - localRem.getLength(), receivedIns.getText());
         }
         else if (receivedIns.getOffset() <= localRem.getOffset()) {
             localRem = new TextRemoveEvent(localRem.getOffset() + receivedIns.getText().length(), localRem.getLength());
@@ -97,7 +102,12 @@ public class Transformer {
             receivedRem = new TextRemoveEvent(receivedRem.getOffset() + localIns.getText().length(), receivedRem.getLength());
         }
         else if (receivedRem.getOffset() < localIns.getOffset() ) {
-            localIns = new TextInsertEvent(localIns.getOffset() - receivedRem.getLength(), localIns.getText());
+            //if we insert into a section getting removed, we move insert before the remove, and remove after it
+            if (localIns.getOffset() < receivedRem.getOffset() + receivedRem.getLength()){
+                localIns = new TextInsertEvent(receivedRem.getOffset(), localIns.getText());
+                receivedRem = new TextRemoveEvent(receivedRem.getOffset() + localIns.getText().length(), receivedRem.getLength());
+            }
+            else localIns = new TextInsertEvent(localIns.getOffset() - receivedRem.getLength(), localIns.getText());
         }
         pair[0] = receivedRem;
         pair[1] = localIns;

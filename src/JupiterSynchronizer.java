@@ -39,6 +39,8 @@ public class JupiterSynchronizer {
             //{msg, outgoing[i]} = xform(msg, outgoing[i]);
             MyTextEvent[] xformed = Transformer.xform(mte, iterator.next());
             mte = xformed[0];
+            xformed[1].setLocalTime(iterator.next().getLocalTime());
+            xformed[1].setOtherTime(iterator.next().getOtherTime());
             outgoing.set(i, xformed[1]);
             i++;
         }
