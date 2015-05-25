@@ -1,7 +1,4 @@
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,8 +8,10 @@ public class kNode implements Runnable {
     ServerSocket sNode3;
 
     int port;
+    private DistributedTextEditor dte;
 
-    public void kNode(int port) {
+    public kNode(DistributedTextEditor dte, int port) {
+        this.dte = dte;
         this.port = port;
     }
 
@@ -42,7 +41,6 @@ public class kNode implements Runnable {
 
                     throw new Exception("No valid role");
                 }
-
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -58,10 +56,21 @@ public class kNode implements Runnable {
         ObjectOutputStream joinOut = null;
 
         joinOut = new ObjectOutputStream(joining.getOutputStream());
-        // TODO: Send all text
-        // TODO: Wait for acknowledge
-        // TODO: Switch to new successor
+        TextInsertEvent tie = new TextInsertEvent(0, dte.getAllText());
 
+        joinOut.writeObject(tie);
+
+        BufferedReader joinIn = new BufferedReader(new InputStreamReader(joining.getInputStream()));
+
+        String response;
+        while ((response = joinIn.readLine()) != null) {        // TODO: Time out?
+        }
+
+        if(response.equals("ok")){
+            successor = joining;
+            joining = null;
+            dte.newSuccessor(successor);
+        }
     }
 
     private void successorJoin() throws IOException {
@@ -71,7 +80,17 @@ public class kNode implements Runnable {
 
         joinOut = new ObjectOutputStream(joining.getOutputStream());
         joinOut.writeObject(new JoinEvent(preIP, Role.PREDECESSOR));
-        // TODO: Wait for acknowledge
-        // TODO: Switch to new predecessor
+
+        BufferedReader joinIn = new BufferedReader(new InputStreamReader(joining.getInputStream()));
+
+        String response;
+        while ((response = joinIn.readLine()) != null) {        // TODO: Time out?
+        }
+
+        if(response.equals("ok")){
+            predecessor = joining;
+            joining = null;
+            dte.newPredecessor(predecessor);
+        }
     }
 }

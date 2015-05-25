@@ -21,6 +21,7 @@ public class EventReplayer implements Runnable {
     private Socket socket;
     private JTextArea area;
     private boolean running = true;
+    private ObjectInputStream inputStream;
 
 
     public EventReplayer(Socket socket, JTextArea area, DistributedTextEditor distributedTextEditor, JupiterSynchronizer jupiterSynchronizer) {
@@ -33,10 +34,10 @@ public class EventReplayer implements Runnable {
     public void run() {
         try {
             while (running) {
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                inputStream = new ObjectInputStream(socket.getInputStream());
                 MyTextEvent mte = null;
                 try {
-                    while ((mte = (MyTextEvent) in.readObject()) != null) {
+                    while ((mte = (MyTextEvent) inputStream.readObject()) != null) {
                         mte = jupiterSynchronizer.receive(mte);
                         if (mte instanceof TextInsertEvent) {
                             final TextInsertEvent tie = (TextInsertEvent) mte;
@@ -88,5 +89,15 @@ public class EventReplayer implements Runnable {
     }
     public void terminate() {
         running = false;
+    }
+
+    public void setSocket(Socket socket){
+        try {
+            this.socket.close();
+            this.socket = socket;
+            inputStream = new ObjectInputStream(socket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

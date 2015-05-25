@@ -12,6 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DistributedTextEditor extends JFrame {
 
+    private final int id;
     private JTextArea area1 = new JTextArea(20,120);
     private JTextField ipaddress = new JTextField("localhost");
     private JTextField portNumber = new JTextField("43921");
@@ -27,8 +28,13 @@ public class DistributedTextEditor extends JFrame {
     private ServerSocket serverSocket;
 
     JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
+    private EventReplayer eventReplayer;
+    private EventPlayer eventPlayer;
 
     public DistributedTextEditor() {
+        // Generate "unique" id
+        id = (int) (10000 * Math.random());
+
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
         ((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
 
@@ -88,37 +94,36 @@ public class DistributedTextEditor extends JFrame {
 
     Action Listen = new AbstractAction("Listen") {
         public void actionPerformed(ActionEvent e) {
-            //Prepare editor for connection
-            saveOld();
-            area1.setText("");
-            changed = false;
-            Save.setEnabled(false);
-            SaveAs.setEnabled(false);
-
-            //Get own address for hosting
-            String address = null;
-            try {
-                address = InetAddress.getLocalHost().getHostAddress();
-            }
-            catch (UnknownHostException e1) {
-                e1.printStackTrace();
-            }
-            int port = Integer.parseInt(portNumber.getText());
-            setTitle("I'm listening on "+address + ":" + port);
-
-            //Create server socket and listen until another DistributedTextEditor connects
-            try {
-                serverSocket = new ServerSocket(port);
-                socket = serverSocket.accept();
-                serverSocket.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            //Create threads for sending and receiving text
-            establishConnection(socket, dec);
-            setTitle("Connected to " + socket.getInetAddress().toString() + ":" +  + socket.getPort());
+            listen();
         }
     };
+
+    private void listen() {
+        //Prepare editor for connection
+        saveOld();
+        area1.setText("");
+        changed = false;
+        Save.setEnabled(false);
+        SaveAs.setEnabled(false);
+
+        //Get own address for hosting
+        String address = null;
+        try {
+            address = InetAddress.getLocalHost().getHostAddress();
+        }
+        catch (UnknownHostException e1) {
+            e1.printStackTrace();
+        }
+        int port = Integer.parseInt(portNumber.getText());
+        setTitle("I'm listening on "+address + ":" + port);
+
+        //Create server socket and listen until another DistributedTextEditor connects
+        kNode mykNode = new kNode(this, port);
+        //Create threads for sending and receiving text
+        establishConnection(socket, dec);
+
+        setTitle("Connected to " + socket.getInetAddress().toString() + ":" +  + socket.getPort());
+    }
 
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
@@ -225,16 +230,24 @@ public class DistributedTextEditor extends JFrame {
     }
 
     private void establishConnection(Socket socket, DocumentEventCapturer dec) {
-        //give threads a number, so we know which was first (most important)
-        int id = (int) (100 * Math.random());
+        newPredecessor(socket);
+        newSuccessor(socket);
+    }
 
-        EventReplayer er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
-        Thread ert = new Thread(er);
+    public void newPredecessor(Socket predecessor){
+        eventReplayer = new EventReplayer(predecessor, area1, this, jupiterSynchronizer);
+        Thread ert = new Thread(eventReplayer);
         ert.start();
+    }
 
-        EventPlayer ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
-        Thread ept = new Thread(ep);
+    public void newSuccessor(Socket successor){
+        eventPlayer = new EventPlayer(successor, dec, this, id, jupiterSynchronizer);
+        Thread ept = new Thread(eventPlayer);
         ept.start();
+    }
+
+    public String getAllText(){
+        return area1.getText();
     }
 
     public static void main(String[] arg) {
