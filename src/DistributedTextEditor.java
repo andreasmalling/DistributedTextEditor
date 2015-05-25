@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DistributedTextEditor extends JFrame {
 
@@ -119,10 +118,8 @@ public class DistributedTextEditor extends JFrame {
 
         //Create server socket and listen until another DistributedTextEditor connects
         kNode mykNode = new kNode(this, port);
-        //Create threads for sending and receiving text
-        establishConnection(socket, dec);
-
-        setTitle("Connected to " + socket.getInetAddress().toString() + ":" +  + socket.getPort());
+        Thread kNodeThread = new Thread(mykNode);
+        kNodeThread.run();
     }
 
     Action Connect = new AbstractAction("Connect") {
@@ -141,8 +138,10 @@ public class DistributedTextEditor extends JFrame {
 
             //Create socket for connection with a listening DistributedTextEditor
             try{
-                socket = new Socket(address, port);
+                connect(address, port);
             } catch (IOException e1) {
+                e1.printStackTrace();
+            } catch (ClassNotFoundException e1) {
                 e1.printStackTrace();
             }
             //Create threads for sending and receiving text
@@ -151,6 +150,48 @@ public class DistributedTextEditor extends JFrame {
 
         }
     };
+
+    private void connect(String ip, int port) throws IOException, ClassNotFoundException {
+        Socket sucSocket = new Socket(ip, port);
+        ObjectOutputStream outputStream = new ObjectOutputStream(sucSocket.getOutputStream());
+        outputStream.writeObject(new JoinEvent(InetAddress.getLocalHost(), Role.SUCCESSOR));
+
+        ObjectInputStream inputStream = new ObjectInputStream(sucSocket.getInputStream());
+        JoinEvent je = (JoinEvent) inputStream.readObject();
+
+        if( je.getIp().toString().equals(ip) ){
+            // Receive all text
+            TextInsertEvent tie = (TextInsertEvent) inputStream.readObject();
+            area1.setText(tie.getText());
+
+            // TODO: set suc and pre and start server
+
+            // Acknowledge
+            PrintWriter out = new PrintWriter(sucSocket.getOutputStream());
+            out.write("ok");
+
+        } else {
+            Socket preSocket = new Socket(je.getIp(), port);
+
+            // Ask for new predecessor
+            je = new JoinEvent(InetAddress.getLocalHost(), Role.PREDECESSOR);
+            ObjectOutputStream preOutputStream = new ObjectOutputStream(preSocket.getOutputStream());
+            preOutputStream.writeObject(je);
+
+            // Receive all text
+            TextInsertEvent tie = (TextInsertEvent) inputStream.readObject();
+            area1.setText(tie.getText());
+
+            // TODO: set suc and pre and start server
+
+            // Acknowledge
+            PrintWriter out = new PrintWriter(sucSocket.getOutputStream());
+            out.write("ok");
+            out = new PrintWriter(preSocket.getOutputStream());
+            out.write("ok");
+        }
+
+    }
 
     //Disconnect method for this DistributedTextEditor
     Action Disconnect = new AbstractAction("Disconnect") {
@@ -235,14 +276,18 @@ public class DistributedTextEditor extends JFrame {
     }
 
     public void newPredecessor(Socket predecessor){
+        setTitle("Connected to " + predecessor.getInetAddress().toString() + ":" +  + predecessor.getPort());
+
         eventReplayer = new EventReplayer(predecessor, area1, this, jupiterSynchronizer);
         Thread ert = new Thread(eventReplayer);
+        System.out.println("new erp");
         ert.start();
     }
 
     public void newSuccessor(Socket successor){
         eventPlayer = new EventPlayer(successor, dec, this, id, jupiterSynchronizer);
         Thread ept = new Thread(eventPlayer);
+        System.out.println("New ep");
         ept.start();
     }
 

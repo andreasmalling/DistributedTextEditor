@@ -1,7 +1,11 @@
 import java.net.InetAddress;
 
+/**
+ * Role is the part you want the other party to play. E.g. contacting a node, and you want to be your successor,
+ * the joinEvent should contain the Role.SUCCESSOR
+ */
 enum Role {
-    PREDECESSOR,SUCCESSOR
+    PREDECESSOR, SUCCESSOR
 }
 
 public class JoinEvent {
