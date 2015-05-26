@@ -6,6 +6,8 @@ public class Transformer {
     public static MyTextEvent[] xform(MyTextEvent received, MyTextEvent local) {
         pair[0] = received;
         pair[1] = local;
+        int localMyMsgs = local.getLocalTime();
+        int localOtherMsgs = local.getOtherTime();
         if(received instanceof TextInsertEvent && local instanceof TextInsertEvent){
             TextInsertEvent receivedIns = (TextInsertEvent) received;
             TextInsertEvent localIns = (TextInsertEvent) local;
@@ -26,6 +28,8 @@ public class Transformer {
             TextInsertEvent localIns = (TextInsertEvent) local;
             pair = removeInsert(receivedRem, localIns);
         }
+        pair[1].setLocalTime(localMyMsgs);
+        pair[1].setOtherTime(localOtherMsgs);
         return pair;
     }
 

@@ -4,10 +4,7 @@ import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.text.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DistributedTextEditor extends JFrame {
@@ -23,8 +20,6 @@ public class DistributedTextEditor extends JFrame {
     private boolean changed = false;
 
     private DocumentEventCapturer dec = new DocumentEventCapturer();
-    private Socket socket;
-    private ServerSocket serverSocket;
 
     JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
@@ -86,66 +81,67 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
+    /**
+     * Computes the name of this peer by resolving the local host name
+     * and adding the current portname.
+     */
+    protected InetSocketAddress _getMyName() {
+        try {
+            InetAddress localhost = InetAddress.getLocalHost();
+            InetSocketAddress name = new InetSocketAddress(localhost, Integer.parseInt(portNumber.getText()));
+            return name;
+        } catch (UnknownHostException e) {
+            System.err.println("Cannot resolve the Internet address of the local host.");
+            System.err.println(e);
+        }
+        return null;
+    }
+
     Action Listen = new AbstractAction("Listen") {
         public void actionPerformed(ActionEvent e) {
-            //Prepare editor for connection
-            saveOld();
-            area1.setText("");
-            changed = false;
-            Save.setEnabled(false);
-            SaveAs.setEnabled(false);
-
-            //Get own address for hosting
-            String address = null;
-            try {
-                address = InetAddress.getLocalHost().getHostAddress();
-            }
-            catch (UnknownHostException e1) {
-                e1.printStackTrace();
-            }
-            int port = Integer.parseInt(portNumber.getText());
-            setTitle("I'm listening on "+address + ":" + port);
-
-            //Create server socket and listen until another DistributedTextEditor connects
-            try {
-                serverSocket = new ServerSocket(port);
-                socket = serverSocket.accept();
-                serverSocket.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            //Create threads for sending and receiving text
-            establishConnection(socket, dec);
-            setTitle("Connected to " + socket.getInetAddress().toString() + ":" +  + socket.getPort());
+            listen();
         }
     };
+
+    public void listen(){
+        //Prepare editor for connection
+        saveOld();
+        area1.setText("");
+        changed = false;
+        Save.setEnabled(false);
+        SaveAs.setEnabled(false);
+        Connect.setEnabled(false);
+        InetSocketAddress name = _getMyName();
+
+        ChordNameService chordNameService = new ChordNameServiceImpl(name, this);
+        chordNameService.createGroup();
+    }
 
     Action Connect = new AbstractAction("Connect") {
         public void actionPerformed(ActionEvent e) {
-            //Prepare editor for connection
-            saveOld();
-            area1.setText("");
-            changed = false;
-            Save.setEnabled(false);
-            SaveAs.setEnabled(false);
-
-            //Connect with a listening DistributedTextEditor
-            String address = ipaddress.getText();
-            int port = Integer.parseInt(portNumber.getText());
-            setTitle("Connecting to " + address +":"+ port + "...");
-
-            //Create socket for connection with a listening DistributedTextEditor
-            try{
-                socket = new Socket(address, port);
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            //Create threads for sending and receiving text
-            establishConnection(socket, dec);
-            setTitle("Connected to " + address + ":" + port);
-
+            connect();
         }
     };
+
+    public void connect(){
+        //Prepare editor for connection
+        saveOld();
+        area1.setText("");
+        changed = false;
+        Save.setEnabled(false);
+        SaveAs.setEnabled(false);
+        Listen.setEnabled(false);
+
+        //Connect with a listening DistributedTextEditor
+        String address = ipaddress.getText();
+        int port = Integer.parseInt(portNumber.getText());
+        InetSocketAddress knownPeer = new InetSocketAddress(address, port);
+
+        InetSocketAddress name = _getMyName();
+
+        ChordNameService chordNameService = new ChordNameServiceImpl(name, this);
+        chordNameService.joinGroup(knownPeer);
+    }
 
     //Disconnect method for this DistributedTextEditor
     Action Disconnect = new AbstractAction("Disconnect") {
@@ -224,17 +220,20 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    private void establishConnection(Socket socket, DocumentEventCapturer dec) {
-        //give threads a number, so we know which was first (most important)
-        int id = (int) (100 * Math.random());
-
-        EventReplayer er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
-        Thread ert = new Thread(er);
-        ert.start();
-
+    public void newEventPlayer(Socket socket, int id){
         EventPlayer ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
         Thread ept = new Thread(ep);
         ept.start();
+    }
+
+    public void newEventReplayer(Socket socket, int id){
+        EventReplayer er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
+        Thread ert = new Thread(er);
+        ert.start();
+    }
+
+    public JTextArea getArea1(){
+        return area1;
     }
 
     public static void main(String[] arg) {
