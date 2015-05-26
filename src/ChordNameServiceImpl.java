@@ -123,8 +123,6 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
                         e1.printStackTrace();
                     }
                 }
-                out.close();
-                in.close();
                 break;
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -171,10 +169,7 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
                         suc = newGuy;
                         nextSocket = joiningSocket;
                         dte.newEventPlayer(nextSocket, myKey);
-                        sucOut.close();
-                        joiningOut.close();
                     }
-                    in.close();
                 }
                 else {//receive new node as new predecessor (je.getRole().equals(Role.PREVIOUS))
                     pre = je.getName();

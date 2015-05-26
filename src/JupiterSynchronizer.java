@@ -3,7 +3,11 @@ import java.util.Iterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Created by Kresten on 12-05-2015.
+ * Based on the article
+ * High-Latency, Low-Bandwidth Windowing in the Jupiter Collaboration System
+ * David A. Nichols, Pavel Curtis,
+ * Michael Dixon, and John Lamping
+ * Xerox PARC
  */
 public class JupiterSynchronizer {
 
