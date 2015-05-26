@@ -18,7 +18,7 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
     private ServerSocket serverSocket;
     private Socket joiningSocket;
     private Socket preSocket;
-    private Socket nextSocket;
+    private Socket sucSocket;
     private boolean active;
 
     public ChordNameServiceImpl(InetSocketAddress myName, DistributedTextEditor dte){
@@ -71,7 +71,7 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
             }
             squeezeIn(preSocket);
             dte.setTitle("Connected to " + connectedAt);
-            dte.newEventPlayer(nextSocket, myKey);
+            dte.newEventPlayer(sucSocket, myKey);
             dte.newEventReplayer(preSocket, myKey);
         }
 
@@ -85,11 +85,26 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
             //Create server socket and listen until another DistributedTextEditor connects
             try {
                 joiningSocket = serverSocket.accept();
-                acceptNode(joiningSocket);
+                processNode(joiningSocket);
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
         }
+        //we want to leave the chord
+        JoinEvent je = null;
+        try {
+            //Send own suc to pre, so it knows which to connect on
+            ObjectOutputStream preout = new ObjectOutputStream(preSocket.getOutputStream());
+            je = new JoinEvent(suc, Role.ABORTSUCCESSOR);
+            preout.writeObject(je);
+            //We cut connection with own suc
+            dte.disconnect();
+            //DETTE KUNNE VIRKE, hvis pre hele tiden så hvad der kommer ind i streamen, altså altid er i processNode. Det er den bare ikke :(((
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         //leaveGroup sætter active=false, så her skal lukkes sockets og gøres rent
 
 	/*
@@ -107,22 +122,18 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
         JoinEvent je = null;
         try {
             ObjectOutputStream out = new ObjectOutputStream(preSocket.getOutputStream());
-            je = new JoinEvent(myName, Role.NEXT);
+            je = new JoinEvent(myName, Role.SUCCESSOR);
             out.writeObject(je);
             ObjectInputStream in = new ObjectInputStream(preSocket.getInputStream());
             while ((je = (JoinEvent) in.readObject()) != null) {
                 //First time around, the listener returns himself as his own successor
                 if(je.getName().equals(connectedAt)){
                     suc = pre;
-                    nextSocket = preSocket;
+                    sucSocket = preSocket;
                 }
-                else if(je.getRole().equals(Role.NEXT)){
+                else if(je.getRole().equals(Role.SUCCESSOR)){
                     suc=je.getName();
-                    try{
-                        nextSocket = new Socket(suc.getAddress(), suc.getPort());
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
+                    sucSocket = new Socket(suc.getAddress(), suc.getPort());
                 }
                 break;
             }
@@ -131,50 +142,59 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
         }
     }
 
-    public void acceptNode(Socket joiningSocket){
-        JoinEvent je = null;
-        JoinEvent sucje = null;
-        JoinEvent joiningje = null;
-        InetSocketAddress newGuy = null;
+    public void processNode(Socket joiningSocket){
+        JoinEvent je;
+        JoinEvent sucje;
+        JoinEvent joiningje;
+        InetSocketAddress newGuy;
         try {
             ObjectInputStream in = new ObjectInputStream(joiningSocket.getInputStream());
             ObjectOutputStream joiningOut = new ObjectOutputStream(joiningSocket.getOutputStream());
             while ((je = (JoinEvent) in.readObject()) != null) {
-                if(je.getRole().equals(Role.NEXT)){
+                if(je.getRole().equals(Role.SUCCESSOR)){
                     newGuy = je.getName();
                     //first time listener has himself as suc and pre
                     if(pre.equals(suc)){
                         //send self to joining node
-                        joiningje = new JoinEvent(suc, Role.NEXT);
+                        joiningje = new JoinEvent(suc, Role.SUCCESSOR);
                         joiningOut.writeObject(joiningje);
                         //joining node is now pre and suc, EventPlayer and EventReplayer is spawned
                         preSocket = joiningSocket;
-                        nextSocket = joiningSocket;
+                        sucSocket = joiningSocket;
                         pre = newGuy;
                         suc = newGuy;
-                        dte.newEventPlayer(nextSocket, myKey);
+                        dte.newEventPlayer(sucSocket, myKey);
                         dte.newEventReplayer(preSocket, myKey);
                     }
                     else {
-                        ObjectOutputStream sucOut = new ObjectOutputStream(nextSocket.getOutputStream());
+                        ObjectOutputStream sucOut = new ObjectOutputStream(sucSocket.getOutputStream());
                         //send new node to own successor
-                        sucje = new JoinEvent(newGuy, Role.PREVIOUS);
+                        sucje = new JoinEvent(newGuy, Role.PREDECESSOR);
                         sucOut.writeObject(sucje);
                         //send own successor to joining node
-                        joiningje = new JoinEvent(suc, Role.NEXT);
+                        joiningje = new JoinEvent(suc, Role.SUCCESSOR);
                         joiningOut.writeObject(joiningje);
                         //drÃ¦b eventplayer, andens EventReplayer, mÃ¥ske et DisconnectEvent???
                         dte.disconnect();
                         //VED IKKE MED DEN HER
-                        while (!nextSocket.isClosed()) {}
+                        while (!sucSocket.isClosed()) {}
                         suc = newGuy;
-                        nextSocket = joiningSocket;
-                        dte.newEventPlayer(nextSocket, myKey);
+                        sucSocket = joiningSocket;
+                        dte.newEventPlayer(sucSocket, myKey);
                     }
+                }
+                else if (je.getRole().equals(Role.ABORTSUCCESSOR)){
+                    //Vi kommer aldrig herned :( find en løsning
+                    //node is leaving, so we need new successor
+                    suc = je.getName();
+                    //cut connection to old suc
+                    dte.disconnect();
+                    sucSocket = new Socket(suc.getAddress(), suc.getPort());
                 }
                 else {//receive new node as new predecessor (je.getRole().equals(Role.PREVIOUS))
                     pre = je.getName();
-                    preSocket.close();
+                    //ved ikke med close, det burde den gamle predecessors disconnect have taget sig af
+                    //preSocket.close();
                     preSocket = new Socket(pre.getAddress(),pre.getPort());
                     dte.newEventReplayer(preSocket, myKey);
                 }

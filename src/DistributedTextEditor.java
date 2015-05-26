@@ -20,7 +20,9 @@ public class DistributedTextEditor extends JFrame {
 
     private DocumentEventCapturer dec = new DocumentEventCapturer();
 
-    JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
+    private JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
+
+    private ChordNameService chordNameService;
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -111,7 +113,7 @@ public class DistributedTextEditor extends JFrame {
         Connect.setEnabled(false);
         InetSocketAddress name = _getMyName();
 
-        ChordNameService chordNameService = new ChordNameServiceImpl(name, this);
+        chordNameService = new ChordNameServiceImpl(name, this);
         chordNameService.createGroup();
     }
 
@@ -137,20 +139,14 @@ public class DistributedTextEditor extends JFrame {
 
         InetSocketAddress name = _getMyName();
 
-        ChordNameService chordNameService = new ChordNameServiceImpl(name, this);
+        chordNameService = new ChordNameServiceImpl(name, this);
         chordNameService.joinGroup(knownPeer);
     }
 
     //Disconnect method for this DistributedTextEditor
     Action Disconnect = new AbstractAction("Disconnect") {
         public void actionPerformed(ActionEvent e) {
-            try {
-                DisconnectEvent disconnectEvent = new DisconnectEvent(0);
-                disconnectEvent.setShouldDisconnect();
-                dec.eventHistory.put(disconnectEvent);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
+            chordNameService.leaveGroup();
             setTitle("Disconnected");
             jupiterSynchronizer.clear();
         }
