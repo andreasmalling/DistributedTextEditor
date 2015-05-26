@@ -41,9 +41,9 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
         joining = false;
         active = true;
         myKey = keyOfName(myName);
-        start();
         this.suc = getChordName();
         this.pre = getChordName();
+        start();
     }
 
     public void joinGroup(InetSocketAddress knownPeer)  {
@@ -90,6 +90,7 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
                 e1.printStackTrace();
             }
         }
+        //leaveGroup sætter active=false, så her skal lukkes sockets og gøres rent
 
 	/*
 	 * If joining we should now enter the existing group and

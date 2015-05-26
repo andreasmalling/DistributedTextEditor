@@ -5,7 +5,6 @@ import java.io.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.net.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class DistributedTextEditor extends JFrame {
 
@@ -77,7 +76,6 @@ public class DistributedTextEditor extends JFrame {
             changed = true;
             Save.setEnabled(true);
             SaveAs.setEnabled(true);
-            dec.toggleMakeEvents(true);
         }
     };
 
