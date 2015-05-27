@@ -99,13 +99,13 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
             preout.writeObject(je);
             //We cut connection with own suc
             dte.disconnect();
-            //DETTE KUNNE VIRKE, hvis pre hele tiden så hvad der kommer ind i streamen, altså altid er i processNode. Det er den bare ikke :(((
+            //DETTE KUNNE VIRKE, hvis pre hele tiden sï¿½ hvad der kommer ind i streamen, altsï¿½ altid er i processNode. Det er den bare ikke :(((
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        //leaveGroup sætter active=false, så her skal lukkes sockets og gøres rent
+        //leaveGroup sï¿½tter active=false, sï¿½ her skal lukkes sockets og gï¿½res rent
 
 	/*
 	 * If joining we should now enter the existing group and
@@ -181,15 +181,30 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
                         suc = newGuy;
                         sucSocket = joiningSocket;
                         dte.newEventPlayer(sucSocket, myKey);
+                        Runnable discoStream = new Runnable() {
+                            @Override
+                            public void run() {
+                                ObjectInputStream discoIn = null;
+                                JoinEvent discoje = null;
+                                try {
+                                    discoIn = new ObjectInputStream(sucSocket.getInputStream());
+                                    while ((discoje = (JoinEvent) discoIn.readObject()) != null) {
+                                        if(discoje.getRole().equals(Role.ABORTSUCCESSOR)){
+                                            //node is leaving, so we need new successor
+                                            suc = je.getName();
+                                            //cut connection to old suc
+                                            dte.disconnect();
+                                            sucSocket = new Socket(suc.getAddress(), suc.getPort());
+                                            break;
+                                        }
+                                    }
+                                } catch (IOException | ClassNotFoundException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        };
+                        discoStream.run();
                     }
-                }
-                else if (je.getRole().equals(Role.ABORTSUCCESSOR)){
-                    //Vi kommer aldrig herned :( find en løsning
-                    //node is leaving, so we need new successor
-                    suc = je.getName();
-                    //cut connection to old suc
-                    dte.disconnect();
-                    sucSocket = new Socket(suc.getAddress(), suc.getPort());
                 }
                 else {//receive new node as new predecessor (je.getRole().equals(Role.PREVIOUS))
                     pre = je.getName();
