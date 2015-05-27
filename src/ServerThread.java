@@ -32,6 +32,7 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         int myKey = cns.keyOfName(cns.getChordName());
+        dte.setTitle("I'm listening on " + cns.getChordName().getAddress() + ":" + port);
 
         try {
             // First join
@@ -57,7 +58,12 @@ public class ServerThread implements Runnable {
                 System.out.println(TAG + " spawns EP");
 
                 DisconnectThread disconnectThread = new DisconnectThread(dte, cns, cns.getSucSocket());
+<<<<<<< HEAD
   
+=======
+                new Thread(disconnectThread).start();
+
+>>>>>>> origin/yolo
                 joiningSocket = null;
             }
 
@@ -66,7 +72,7 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                outStream = new ObjectOutputStream(preSocket.getOutputStream());
+                //outStream = new ObjectOutputStream(preSocket.getOutputStream());
 
                 outStream.writeObject(new DisconnectEvent(preSocket.getInetAddress()));
                 preSocket.close();
