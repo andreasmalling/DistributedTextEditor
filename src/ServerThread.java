@@ -35,7 +35,6 @@ public class ServerThread implements Runnable {
         dte.setTitle("I'm listening on " + cns.getChordName().getAddress() + ":" + port);
 
         try {
-            outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
             // First join
             if (server == null) {
                 server = new ServerSocket(port);
@@ -51,6 +50,7 @@ public class ServerThread implements Runnable {
 
                 //cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
                 cns.setSucSocket(joiningSocket);
+                outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
                 outStream.writeObject(new ConnectEvent());
 
                 dte.newEventPlayer(joiningSocket, myKey);
