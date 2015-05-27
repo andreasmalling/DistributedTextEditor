@@ -14,6 +14,7 @@ public class ServerThread implements Runnable {
     private DistributedTextEditor dte;
     private Socket joiningSocket;
     private ServerSocket server;
+    private ObjectOutputStream outStream;
 
     public ServerThread(DistributedTextEditor dte, ChordNameServiceImpl cns) {
         this.dte = dte;
@@ -48,8 +49,8 @@ public class ServerThread implements Runnable {
 
                 //cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
                 cns.setSucSocket(joiningSocket);
-                ObjectOutputStream connectStream = new ObjectOutputStream(joiningSocket.getOutputStream());
-                connectStream.writeObject(new ConnectEvent());
+                outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
+                outStream.writeObject(new ConnectEvent());
 
                 dte.newEventPlayer(joiningSocket, myKey);
 
@@ -65,9 +66,9 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                ObjectOutputStream disconnectStream = new ObjectOutputStream(preSocket.getOutputStream());
+                outStream = new ObjectOutputStream(preSocket.getOutputStream());
 
-                disconnectStream.writeObject(new DisconnectEvent(preSocket.getInetAddress()));
+                outStream.writeObject(new DisconnectEvent(preSocket.getInetAddress()));
                 preSocket.close();
 
                 cns.setPreSocket(joiningSocket);
