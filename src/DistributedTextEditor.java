@@ -22,7 +22,9 @@ public class DistributedTextEditor extends JFrame {
 
     private JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
-    private ChordNameService chordNameService;
+    private ChordNameServiceImpl chordNameService;
+    private EventPlayer ep;
+    private EventReplayer er;
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -152,17 +154,6 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    //Disconnect method for the connected DistributedTextEditor
-    public void disconnect(){
-        try {
-            dec.eventHistory.put(new DisconnectEvent(0));
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
-        }
-        setTitle("Disconnected");
-        jupiterSynchronizer.clear();
-    }
-
     Action Save = new AbstractAction("Save") {
         public void actionPerformed(ActionEvent e) {
             if(!currentFile.equals("Untitled"))
@@ -215,19 +206,29 @@ public class DistributedTextEditor extends JFrame {
     }
 
     public void newEventPlayer(Socket socket, int id){
-        EventPlayer ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
-        Thread ept = new Thread(ep);
-        ept.start();
+        if (ep == null) {
+            ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
+            Thread ept = new Thread(ep);
+            ept.start();
+        } else
+            ep.updateSocket(socket);
     }
 
     public void newEventReplayer(Socket socket, int id){
-        EventReplayer er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
-        Thread ert = new Thread(er);
-        ert.start();
+        if(er == null) {
+            er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
+            Thread ert = new Thread(er);
+            ert.start();
+        } else
+            er.updateSocket(socket);
     }
 
     public JTextArea getArea1(){
         return area1;
+    }
+
+    public int getPort() {
+        return Integer.parseInt(portNumber.getText());
     }
 
     public static void main(String[] arg) {

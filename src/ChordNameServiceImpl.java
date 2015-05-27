@@ -5,7 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class ChordNameServiceImpl extends Thread implements ChordNameService  {
+public class ChordNameServiceImpl {
 
     private DistributedTextEditor dte;
     private int port;
@@ -15,11 +15,29 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
     private InetSocketAddress pre;
     private InetSocketAddress connectedAt;
     private ServerSocket serverSocket;
-    private Socket joiningSocket;
-    private Socket preSocket;
-    private Socket sucSocket;
+
+    private Socket preSocket, sucSocket;
+    private DisconnectThread disconnectThread;
+
+    public Socket getSucSocket() {
+        return sucSocket;
+    }
+
+    public void setSucSocket(Socket sucSocket) {
+        this.sucSocket = sucSocket;
+    }
+
+    public Socket getPreSocket() {
+        return preSocket;
+    }
+
+    public void setPreSocket(Socket preSocket) {
+        this.preSocket = preSocket;
+    }
+
     private boolean active;
     private boolean first;
+    private ServerThread serverThread;
 
     public ChordNameServiceImpl(InetSocketAddress myName, DistributedTextEditor dte){
         this.myName = myName;
@@ -37,41 +55,50 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
         return myName;
     }
 
-    public void createGroup() {
-        active = true;
-        first = true;
-        myKey = keyOfName(myName);
-        this.suc = getChordName();
-        this.pre = getChordName();
-        start();
+    public void createGroup(){
+        serverThread = new ServerThread(dte,this);
+        new Thread(serverThread).run();
     }
 
     public void joinGroup(InetSocketAddress knownPeer)  {
         active = true;
-        this.port = knownPeer.getPort();
         connectedAt = knownPeer;
-        myKey = keyOfName(myName);
-        this.pre = knownPeer;
-        start();
+
+        try {
+            // Setup successor
+            sucSocket = new Socket(knownPeer.getAddress(),port);
+
+            // Start listening for disconnects from successor
+            disconnectThread = new DisconnectThread(dte,this,sucSocket);
+            new Thread(disconnectThread).run();
+
+            dte.newEventPlayer(sucSocket, myKey);
+
+            // Wait for new predecessor
+            ServerSocket server = new ServerSocket(port);
+            preSocket = server.accept();
+            dte.newEventReplayer(preSocket, myKey);
+
+            // Keep listining for new joins
+            serverThread = new ServerThread(dte,this,server);
+            new Thread(serverThread).run();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void leaveGroup() {
-        active = false;
-    }
+        try {
+            ObjectOutputStream disconnectStream = new ObjectOutputStream(preSocket.getOutputStream());
+            disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
+            preSocket.close();
+            sucSocket.close();
 
-    public void run() {
-        System.out.println("My name is " + myName + " and my key is " + myKey);
-        while(active) {
-            //Create server socket and listen until another DistributedTextEditor connects
-            try {
-                joiningSocket = serverSocket.accept();
-                if(first){
-                    firstConnection(joiningSocket);
-                }
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+    }
 
 	/*
 	 * If joining we should now enter the existing group and
@@ -82,14 +109,4 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
 	 * should return so that the thread running it might
 	 * terminate.
 	 */
-    }
-
-    private void firstConnection(Socket joiningSocket) {
-        preSocket = joiningSocket;
-        dte.newEventPlayer(preSocket, myKey);
-        sucSocket = joiningSocket;
-        dte.newEventReplayer(sucSocket, myKey);
-        first = false;
-    }
-
 }

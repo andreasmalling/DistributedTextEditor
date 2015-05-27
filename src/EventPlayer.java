@@ -11,6 +11,7 @@ public class EventPlayer implements Runnable {
     private Socket socket;
     private DocumentEventCapturer dec;
     private boolean running = true;
+    private ObjectOutputStream out;
 
     public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor, int id, JupiterSynchronizer jupiterSynchronizer) {
         this.dec = dec;
@@ -20,19 +21,24 @@ public class EventPlayer implements Runnable {
         this.jupiterSynchronizer = jupiterSynchronizer;
     }
 
+    public void updateSocket(Socket socket) {
+        this.socket = socket;
+        try {
+            out = new ObjectOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void run() {
         try {
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
             while (running) {
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                 MyTextEvent mte = dec.take();
                 mte = jupiterSynchronizer.generate(mte);
                 mte.setId(id);
                 out.writeObject(mte);
-                //If the MyTextEvent received is a DisconnectEvent, close the thread
-                if (mte instanceof DisconnectEvent) {
-                    terminate();
-                }
             }
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
