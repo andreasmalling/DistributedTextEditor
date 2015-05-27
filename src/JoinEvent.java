@@ -2,7 +2,7 @@ import java.io.Serializable;
 import java.net.InetSocketAddress;
 
 enum Role{
-    PREDECESSOR, SUCCESSOR, ABORTSUCCESSOR
+    PREDECESSOR, SUCCESSOR, ABORT
 }
 public class JoinEvent implements Serializable {
     private final InetSocketAddress name;
