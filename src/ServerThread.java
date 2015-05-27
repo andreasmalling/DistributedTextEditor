@@ -8,6 +8,7 @@ import java.net.Socket;
 
 public class ServerThread implements Runnable {
 
+    private String TAG = "ServerThread";
     private final ChordNameServiceImpl cns;
     private final int port;
     private DistributedTextEditor dte;
@@ -36,12 +37,23 @@ public class ServerThread implements Runnable {
             if (server == null) {
                 server = new ServerSocket(port);
 
+                System.out.println(TAG + " is hosting");
                 joiningSocket = server.accept();
+                System.out.println(TAG + " has one friend");
+
                 cns.setPreSocket(joiningSocket);
                 dte.newEventReplayer(joiningSocket, myKey);
 
-                cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
+                System.out.println(TAG + " spawns ERP");
+
+                //cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
+                cns.setSucSocket(joiningSocket);
+                ObjectOutputStream connectStream = new ObjectOutputStream(joiningSocket.getOutputStream());
+                connectStream.writeObject(new ConnectEvent());
+
                 dte.newEventPlayer(joiningSocket, myKey);
+
+                System.out.println(TAG + " spawns EP");
 
                 DisconnectThread disconnectThread = new DisconnectThread(dte, cns, cns.getSucSocket());
 

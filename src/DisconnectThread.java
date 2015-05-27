@@ -20,17 +20,21 @@ public class DisconnectThread implements Runnable {
         try {
             while(true) {
                 ObjectInputStream disconnectStream = new ObjectInputStream(socket.getInputStream());
-                DisconnectEvent de;
-                while ((de = (DisconnectEvent) disconnectStream.readObject()) != null) {
+                Object de;
+                while ((de = disconnectStream.readObject()) != null) {
                 }
 
-                InetAddress newSuccessor = de.getNewSuccessor();
-                cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
+                if (de instanceof DisconnectEvent) {
+                    InetAddress newSuccessor = ((DisconnectEvent) de).getNewSuccessor();
+                    cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
 
-                dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
+                    dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
 
-                // New successor
-                socket = cns.getSucSocket();
+                    // New successor
+                    socket = cns.getSucSocket();
+                } else if (de instanceof ConnectEvent) {
+                    cns.setSucSocket(cns.getPreSocket());
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
