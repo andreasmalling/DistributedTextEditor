@@ -32,8 +32,10 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         int myKey = cns.keyOfName(cns.getChordName());
+        dte.setTitle("I'm listening on " + cns.getChordName().getAddress() + ":" + port);
 
         try {
+            outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
             // First join
             if (server == null) {
                 server = new ServerSocket(port);
@@ -49,7 +51,6 @@ public class ServerThread implements Runnable {
 
                 //cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
                 cns.setSucSocket(joiningSocket);
-                outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
                 outStream.writeObject(new ConnectEvent());
 
                 dte.newEventPlayer(joiningSocket, myKey);
@@ -57,6 +58,7 @@ public class ServerThread implements Runnable {
                 System.out.println(TAG + " spawns EP");
 
                 DisconnectThread disconnectThread = new DisconnectThread(dte, cns, cns.getSucSocket());
+                new Thread(disconnectThread).start();
 
                 joiningSocket = null;
             }
@@ -66,7 +68,7 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                outStream = new ObjectOutputStream(preSocket.getOutputStream());
+                //outStream = new ObjectOutputStream(preSocket.getOutputStream());
 
                 outStream.writeObject(new DisconnectEvent(preSocket.getInetAddress()));
                 preSocket.close();
