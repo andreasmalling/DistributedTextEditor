@@ -1,6 +1,6 @@
-import java.net.InetAddress;
+import java.io.Serializable;
 
-public class ConnectEvent {
+public class ConnectEvent implements Serializable {
 
     private boolean krestenInsists = true;
 
