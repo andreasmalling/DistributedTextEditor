@@ -191,7 +191,7 @@ public class ChordNameServiceImpl extends Thread implements ChordNameService  {
                                     while ((discoje = (JoinEvent) discoIn.readObject()) != null) {
                                         if(discoje.getRole().equals(Role.ABORTSUCCESSOR)){
                                             //node is leaving, so we need new successor
-                                            suc = je.getName();
+                                            suc = discoje.getName();
                                             //cut connection to old suc
                                             dte.disconnect();
                                             sucSocket = new Socket(suc.getAddress(), suc.getPort());
