@@ -72,6 +72,7 @@ public class EventReplayer implements Runnable {
                             System.out.println("ERP Received RipEvent");
                             terminate();
                             socket.close();
+                            break;
                         }
                     }
                 } catch (Exception _) {

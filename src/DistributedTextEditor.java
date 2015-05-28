@@ -219,7 +219,6 @@ public class DistributedTextEditor extends JFrame {
             Thread ept = new Thread(ep);
             ept.start();
         }
-        sendAllText();
     }
 
     public void killEventPlayer(){

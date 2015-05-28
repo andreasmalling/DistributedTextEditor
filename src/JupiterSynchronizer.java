@@ -52,6 +52,8 @@ public class JupiterSynchronizer {
 
     public void clear(){
         outgoing.clear();
+        myMsgs = 0;
+        otherMsgs = 0;
     }
 
 }

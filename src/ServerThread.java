@@ -15,6 +15,7 @@ public class ServerThread implements Runnable {
     private Socket joiningSocket;
     private ServerSocket server;
     private ObjectOutputStream outStream;
+    private boolean running;
 
     public ServerThread(DistributedTextEditor dte, ChordNameServiceImpl cns) {
         this.dte = dte;
@@ -61,7 +62,7 @@ public class ServerThread implements Runnable {
                 joiningSocket = null;
             }
 
-            while(true) {
+            while(running) {
                 System.out.println("in serverLoop");
                 joiningSocket = server.accept();
 
@@ -80,5 +81,8 @@ public class ServerThread implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public void terminate(){
+        running = false;
     }
 }

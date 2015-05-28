@@ -119,13 +119,4 @@ public class ChordNameServiceImpl {
         return leaving;
     }
 
-	/*
-	 * If joining we should now enter the existing group and
-	 * should at some point register this peer on its port if not
-	 * already done and start listening for incoming connection
-	 * from other peers who want to enter or leave the
-	 * group. After leaveGroup() was called, the run() method
-	 * should return so that the thread running it might
-	 * terminate.
-	 */
 }
