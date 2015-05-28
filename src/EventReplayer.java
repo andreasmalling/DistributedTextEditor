@@ -49,7 +49,6 @@ public class EventReplayer implements Runnable {
                 try {
                     while ((mte = (MyTextEvent) in.readObject()) != null) {
                         mte = jupiterSynchronizer.receive(mte);
-                        System.out.println("Event received");
                         if (mte instanceof TextInsertEvent) {
                             final TextInsertEvent tie = (TextInsertEvent) mte;
                             EventQueue.invokeLater(new Runnable() {

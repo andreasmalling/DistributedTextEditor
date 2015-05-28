@@ -76,7 +76,7 @@ public class ChordNameServiceImpl {
             dte.newEventPlayer(sucSocket, myKey);
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
-            serverSocket = new ServerSocket(port);//FIXME
+            serverSocket = new ServerSocket(port);
             serverSocket.setSoTimeout(1000);
             preSocket = serverSocket.accept();
             System.out.println("accepted");

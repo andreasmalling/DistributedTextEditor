@@ -37,7 +37,6 @@ public class EventPlayer implements Runnable {
             while (running) {
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                 MyTextEvent mte = dec.take();
-                System.out.println("Event taken");
                 mte = jupiterSynchronizer.generate(mte);
                 mte.setId(id);
                 out.writeObject(mte);
