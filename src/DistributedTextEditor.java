@@ -113,7 +113,6 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
-        Connect.setEnabled(false);
         InetSocketAddress name = _getMyName();
 
         chordNameService = new ChordNameServiceImpl(name, this);
@@ -133,7 +132,6 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
-        Listen.setEnabled(false);
 
         //Connect with a listening DistributedTextEditor
         String address = ipaddress.getText();
