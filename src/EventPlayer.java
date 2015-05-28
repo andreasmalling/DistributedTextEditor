@@ -33,6 +33,7 @@ public class EventPlayer implements Runnable {
     public void run() {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
+            System.out.println("EP " + socket.toString());
             while (running) {
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                 MyTextEvent mte = dec.take();

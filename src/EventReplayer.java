@@ -42,6 +42,7 @@ public class EventReplayer implements Runnable {
 
     public void run() {
         try {
+            System.out.println("ERP " + socket.toString());
             while (running) {
                 in = new ObjectInputStream(socket.getInputStream());
                 MyTextEvent mte = null;
