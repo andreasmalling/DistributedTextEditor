@@ -115,8 +115,6 @@ public class ChordNameServiceImpl {
             Socket socket = new Socket(preSocket.getInetAddress(), preSocket.getPort()+1);
             ObjectOutputStream disconnectStream = new ObjectOutputStream(socket.getOutputStream());
             disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
-            preSocket.close();
-            sucSocket.close();
 
         } catch (IOException e) {
             e.printStackTrace();
