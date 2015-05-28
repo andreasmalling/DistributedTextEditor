@@ -21,15 +21,6 @@ public class EventPlayer implements Runnable {
         this.jupiterSynchronizer = jupiterSynchronizer;
     }
 
-    public void updateSocket(Socket socket) {
-        this.socket = socket;
-        try {
-            out = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void run() {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
@@ -40,6 +31,10 @@ public class EventPlayer implements Runnable {
                 mte = jupiterSynchronizer.generate(mte);
                 mte.setId(id);
                 out.writeObject(mte);
+                if(mte instanceof RipEvent){
+                    System.out.println("EP Received RipEvent");
+                    terminate();
+                }
             }
             //socket.close();
         } catch (IOException | InterruptedException e) {

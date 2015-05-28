@@ -1,5 +1,4 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -11,13 +10,9 @@ public class ChordNameServiceImpl {
     private int port;
     protected InetSocketAddress myName;
     protected int myKey;
-    private InetSocketAddress suc;
-    private InetSocketAddress pre;
-    private InetSocketAddress connectedAt;
     private ServerSocket serverSocket;
 
     private Socket preSocket, sucSocket;
-    private DisconnectThread disconnectThread;
     private boolean leaving;
 
     public Socket getSucSocket() {
@@ -36,8 +31,6 @@ public class ChordNameServiceImpl {
         this.preSocket = preSocket;
     }
 
-    private boolean active;
-    private boolean first;
     private ServerThread serverThread;
 
     public ChordNameServiceImpl(InetSocketAddress myName, DistributedTextEditor dte){
@@ -62,15 +55,13 @@ public class ChordNameServiceImpl {
     }
 
     public void joinGroup(InetSocketAddress knownPeer)  {
-        active = true;
-        connectedAt = knownPeer;
 
         try {
             // Setup successor
             sucSocket = new Socket(knownPeer.getAddress(),port);
 
             // Start listening for disconnects from successor
-            disconnectThread = new DisconnectThread(dte,this);
+            DisconnectThread disconnectThread = new DisconnectThread(dte, this);
             new Thread(disconnectThread).start();
 
             System.out.println("EP spawned");

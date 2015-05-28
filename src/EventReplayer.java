@@ -31,15 +31,6 @@ public class EventReplayer implements Runnable {
         this.jupiterSynchronizer = jupiterSynchronizer;
     }
 
-    public void updateSocket(Socket socket) {
-        this.socket = socket;
-        try {
-            in = new ObjectInputStream(socket.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void run() {
         try {
             System.out.println("ERP " + socket.toString());
@@ -77,6 +68,10 @@ public class EventReplayer implements Runnable {
                                     }
                                 }
                             });
+                        } else if (mte instanceof RipEvent) {
+                            System.out.println("ERP Received RipEvent");
+                            terminate();
+                            socket.close();
                         }
                     }
                 } catch (Exception _) {
