@@ -81,7 +81,6 @@ public class ChordNameServiceImpl {
                         System.out.println("about to close");
                         finalServer.close();
                         System.out.println("closed");
-                        first = true;
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
                     }
@@ -89,31 +88,38 @@ public class ChordNameServiceImpl {
             }).start();
             preSocket = server.accept();
             System.out.println("Done waiting");
-            if(first){
-                preSocket = sucSocket;
-                dte.newEventReplayer(preSocket, myKey);
-                hack = new Socket(preSocket.getInetAddress(), port+1);
 
+            System.out.println("else");
+            // Start listening for disconnects from successor
+            disconnectThread = new DisconnectThread(dte, this, sucSocket);
+            new Thread(disconnectThread).start();
+
+            dte.newEventReplayer(preSocket, myKey);
+
+            // Keep listening for new joins
+            serverThread = new ServerThread(dte, this, server);
+            new Thread(serverThread).start();
+
+        }
+        catch (SocketException e1){
+            first = true;
+            System.out.println("first");
+            preSocket = sucSocket;
+            dte.newEventReplayer(preSocket, myKey);
+            try {
+                hack = new Socket(preSocket.getInetAddress(), port+1);
                 // Start listening for disconnects from successor
                 disconnectThread = new DisconnectThread(dte,this,hack);
                 new Thread(disconnectThread).start();
 
                 // Keep listening for new joins
-                server = new ServerSocket(port);
+                ServerSocket server = new ServerSocket(port);
                 serverThread = new ServerThread(dte,this,server);
                 new Thread(serverThread).start();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            else {
-                // Start listening for disconnects from successor
-                disconnectThread = new DisconnectThread(dte, this, sucSocket);
-                new Thread(disconnectThread).start();
 
-                dte.newEventReplayer(preSocket, myKey);
-
-                // Keep listening for new joins
-                serverThread = new ServerThread(dte, this, server);
-                new Thread(serverThread).start();
-            }
         }
         catch (IOException e) {
             e.printStackTrace();
