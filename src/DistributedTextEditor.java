@@ -27,25 +27,61 @@ public class DistributedTextEditor extends JFrame {
     private EventReplayer er = null;
 
     public DistributedTextEditor() {
-        area1.setFont(new Font("Monospaced",Font.PLAIN,12));
+        area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
 
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-
+        
         JScrollPane scroll1 =
                 new JScrollPane(area1,
                         JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                         JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        content.add(scroll1,BorderLayout.CENTER);
+        content.add(scroll1, BorderLayout.CENTER);
+        scroll1.setBackground(Color.RED);
 
-        content.add(ipaddress,BorderLayout.CENTER);
-        content.add(portNumber,BorderLayout.CENTER);
+        content.add(ipaddress, BorderLayout.CENTER);
+        ipaddress.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        ipaddress.setForeground(Color.RED);
+        ipaddress.setBackground(Color.GREEN);
+        content.add(portNumber, BorderLayout.CENTER);
+        portNumber.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        portNumber.setForeground(Color.RED);
+        portNumber.setBackground(Color.GREEN);
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottom.setBackground(Color.CYAN);
+
+        JButton listen = new JButton("Listen");
+        JButton connect = new JButton("Connect");
+        JButton disconnect = new JButton("Disconnect");
+
+        bottom.add(listen);
+        bottom.add(Box.createHorizontalStrut(5));
+        bottom.add(connect);
+        bottom.add(Box.createHorizontalStrut(575));
+        bottom.add(disconnect);
+        content.add(bottom);
+        listen.addActionListener(Listen);
+        connect.addActionListener(Connect);
+        disconnect.addActionListener(Disconnect);
+
+        listen.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        listen.setForeground(Color.MAGENTA);
+        connect.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        connect.setForeground(Color.MAGENTA);
+        disconnect.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        disconnect.setForeground(Color.MAGENTA);
 
         JMenuBar JMB = new JMenuBar();
+        JMB.setBackground(Color.BLUE);
         setJMenuBar(JMB);
         JMenu file = new JMenu("File");
+        file.setFont(new Font("Comic Sans MS", Font.ITALIC, 14));
+        file.setForeground(Color.GREEN);
         JMenu edit = new JMenu("Edit");
+        edit.setFont(new Font("Comic Sans MS", Font.ITALIC, 14));
+        edit.setForeground(Color.GREEN);
         JMB.add(file);
         JMB.add(edit);
 
