@@ -23,8 +23,8 @@ public class DistributedTextEditor extends JFrame {
     private JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
     private ChordNameServiceImpl chordNameService;
-    private EventPlayer ep;
-    private EventReplayer er;
+    private EventPlayer ep = null;
+    private EventReplayer er = null;
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced",Font.PLAIN,12));
@@ -207,6 +207,7 @@ public class DistributedTextEditor extends JFrame {
 
     public void newEventPlayer(Socket socket, int id){
         if (ep == null) {
+            System.out.println("EP: i am null");
             ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
@@ -216,6 +217,7 @@ public class DistributedTextEditor extends JFrame {
 
     public void newEventReplayer(Socket socket, int id){
         if(er == null) {
+            System.out.println("ERP: i am null");
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
             Thread ert = new Thread(er);
             ert.start();

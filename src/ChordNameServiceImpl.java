@@ -72,6 +72,7 @@ public class ChordNameServiceImpl {
             disconnectThread = new DisconnectThread(dte,this);
             new Thread(disconnectThread).start();
 
+            System.out.println("EP spawned");
             dte.newEventPlayer(sucSocket, myKey);
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
@@ -83,6 +84,7 @@ public class ChordNameServiceImpl {
             // Keep listening for new joins
             serverThread = new ServerThread(dte,this,server);
             new Thread(serverThread).start();
+            System.out.println("serverThread spawned");
         } catch (IOException e) {
             e.printStackTrace();
         }

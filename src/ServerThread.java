@@ -62,6 +62,7 @@ public class ServerThread implements Runnable {
             }
 
             while(true) {
+                System.out.println("in serverLoop");
                 joiningSocket = server.accept();
 
                 Socket preSocket = cns.getPreSocket();
