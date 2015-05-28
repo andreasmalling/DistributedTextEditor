@@ -48,7 +48,7 @@ public class ServerThread implements Runnable {
 
                 System.out.println(TAG + " spawns ERP");
 
-                cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));//FIXME
+                cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), joiningSocket.getPort()));//FIXME
 
                 dte.newEventPlayer(joiningSocket, myKey);
 
