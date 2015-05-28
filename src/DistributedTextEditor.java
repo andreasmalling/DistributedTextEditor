@@ -214,12 +214,16 @@ public class DistributedTextEditor extends JFrame {
             ept.start();
         } else{
             System.out.println("EP not null");
-            ep.terminate();
+            killEventPlayer();
             ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
         }
         sendAllText();
+    }
+
+    public void killEventPlayer(){
+        ep.terminate();
     }
 
     public void newEventReplayer(Socket socket, int id){
@@ -230,11 +234,15 @@ public class DistributedTextEditor extends JFrame {
             ert.start();
         } else {
             System.out.println("ERP not null");
-            er.terminate();
+            killEventReplayer();
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
             Thread ert = new Thread(er);
             ert.start();
         }
+    }
+
+    public void killEventReplayer(){
+        er.terminate();
     }
 
     public void sendAllText(){

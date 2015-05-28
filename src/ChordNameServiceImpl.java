@@ -18,6 +18,7 @@ public class ChordNameServiceImpl {
 
     private Socket preSocket, sucSocket;
     private DisconnectThread disconnectThread;
+    private boolean leaving;
 
     public Socket getSucSocket() {
         return sucSocket;
@@ -116,11 +117,15 @@ public class ChordNameServiceImpl {
             Socket socket = new Socket(preSocket.getInetAddress(), port+1);
             ObjectOutputStream disconnectStream = new ObjectOutputStream(socket.getOutputStream());
             disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
+            leaving = true;
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+    public boolean isLeaving(){
+        return leaving;
     }
 
 	/*

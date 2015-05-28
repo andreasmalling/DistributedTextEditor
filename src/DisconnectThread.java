@@ -27,10 +27,21 @@ public class DisconnectThread implements Runnable {
                 ObjectInputStream disconnectStream = new ObjectInputStream(disconnectingSocket.getInputStream());
                 DisconnectEvent de;
                 while ((de = (DisconnectEvent) disconnectStream.readObject()) != null) {
-                    InetAddress newSuccessor = de.getNewSuccessor();
-                    cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
-                    dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
-                    System.out.println("allahu akbar");
+                    //if Disconnect button is pressed, shut down
+                    if (cns.isLeaving()) {
+                        dte.killEventPlayer();
+                        dte.killEventReplayer();
+                        disconnectingSocket.close();
+                        cns.getSucSocket().close();
+                        cns.getPreSocket().close();
+                    }
+                    //else it is a soft disc when a node wants to join chord
+                    else {
+                        InetAddress newSuccessor = de.getNewSuccessor();
+                        cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
+                        dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
+                        System.out.println("allahu akbar");
+                    }
                 }
             }
         } catch (IOException e) {
