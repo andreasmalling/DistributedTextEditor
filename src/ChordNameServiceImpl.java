@@ -76,15 +76,15 @@ public class ChordNameServiceImpl {
             dte.newEventPlayer(sucSocket, myKey);
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
-            ServerSocket server = new ServerSocket(port);//FIXME
-            server.setSoTimeout(1000);
-            preSocket = server.accept();
+            serverSocket = new ServerSocket(port);//FIXME
+            serverSocket.setSoTimeout(1000);
+            preSocket = serverSocket.accept();
             System.out.println("accepted");
 
             dte.newEventReplayer(preSocket, myKey);
             System.out.println("ERP spawned");
             // Keep listening for new joins
-            serverThread = new ServerThread(dte,this,server);
+            serverThread = new ServerThread(dte,this,serverSocket);
             new Thread(serverThread).start();
             System.out.println("serverThread spawned");
         }catch ( java.io.InterruptedIOException e1 ) {
@@ -95,13 +95,13 @@ public class ChordNameServiceImpl {
             dte.newEventReplayer(preSocket, myKey);
             System.out.println("ERP spawned in exception");
             // Keep listening for new joins
-            ServerSocket server = null;
             try {
-                server = new ServerSocket(port);
+                serverSocket.close();
+                serverSocket = new ServerSocket(port);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            serverThread = new ServerThread(dte,this,server);
+            serverThread = new ServerThread(dte,this,serverSocket);
             new Thread(serverThread).start();
             System.out.println("serverThread spawned in exception");
         }
