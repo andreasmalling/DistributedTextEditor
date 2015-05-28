@@ -1,38 +1,35 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class DisconnectThread implements Runnable {
 
-    private Socket socket;
+    private final int port;
     private final ChordNameServiceImpl cns;
     private final DistributedTextEditor dte;
+    private Socket disconnectingSocket;
 
-    public DisconnectThread(DistributedTextEditor dte, ChordNameServiceImpl cns, Socket predecessor) {
-        socket = predecessor;
+    public DisconnectThread(DistributedTextEditor dte, ChordNameServiceImpl cns) {
         this.cns = cns;
         this.dte = dte;
+        port = cns.getChordName().getPort();
     }
 
     @Override
     public void run() {
         try {
+            ServerSocket server = new ServerSocket(port+1);
             while(true) {
-                ObjectInputStream disconnectStream = new ObjectInputStream(socket.getInputStream());
-                Object de;
-                while ((de = disconnectStream.readObject()) != null) {
-                    if (de instanceof DisconnectEvent) {
-                        InetAddress newSuccessor = ((DisconnectEvent) de).getNewSuccessor();
-                        cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
-
-                        dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
-
-                        // New successor
-                        socket = cns.getSucSocket();
-                    } else if (de instanceof ConnectEvent) {
-                        cns.setSucSocket(cns.getPreSocket());
-                    }
+                disconnectingSocket = server.accept();
+                ObjectInputStream disconnectStream = new ObjectInputStream(disconnectingSocket.getInputStream());
+                DisconnectEvent de;
+                while ((de = (DisconnectEvent) disconnectStream.readObject()) != null) {
+                    InetAddress newSuccessor = de.getNewSuccessor();
+                    cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
+                    dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
                 }
             }
         } catch (IOException e) {

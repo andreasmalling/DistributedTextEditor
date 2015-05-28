@@ -69,7 +69,7 @@ public class ChordNameServiceImpl {
             sucSocket = new Socket(knownPeer.getAddress(),port);
 
             // Start listening for disconnects from successor
-            disconnectThread = new DisconnectThread(dte,this,sucSocket);
+            disconnectThread = new DisconnectThread(dte,this);
             new Thread(disconnectThread).run();
 
             dte.newEventPlayer(sucSocket, myKey);
@@ -89,7 +89,8 @@ public class ChordNameServiceImpl {
 
     public void leaveGroup() {
         try {
-            ObjectOutputStream disconnectStream = new ObjectOutputStream(preSocket.getOutputStream());
+            Socket socket = new Socket(preSocket.getInetAddress(), preSocket.getPort()+1);
+            ObjectOutputStream disconnectStream = new ObjectOutputStream(socket.getOutputStream());
             disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
             preSocket.close();
             sucSocket.close();
