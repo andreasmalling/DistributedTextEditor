@@ -112,7 +112,7 @@ public class ChordNameServiceImpl {
 
     public void leaveGroup() {
         try {
-            Socket socket = new Socket(preSocket.getInetAddress(), preSocket.getPort()+1);
+            Socket socket = new Socket(preSocket.getInetAddress(), 43922);
             ObjectOutputStream disconnectStream = new ObjectOutputStream(socket.getOutputStream());
             disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
 
