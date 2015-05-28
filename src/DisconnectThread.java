@@ -21,7 +21,7 @@ public class DisconnectThread implements Runnable {
     @Override
     public void run() {
         try {
-            ServerSocket server = new ServerSocket(43922);
+            ServerSocket server = new ServerSocket(port+1);
             while(true) {
                 disconnectingSocket = server.accept();
                 ObjectInputStream disconnectStream = new ObjectInputStream(disconnectingSocket.getInputStream());

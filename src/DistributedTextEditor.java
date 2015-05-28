@@ -207,6 +207,7 @@ public class DistributedTextEditor extends JFrame {
     }
 
     public void newEventPlayer(Socket socket, int id){
+        sendAllText();
         if (ep == null) {
             System.out.println("EP: i am null");
             ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
@@ -237,8 +238,8 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    public JTextArea getArea1(){
-        return area1;
+    public void sendAllText(){
+        dec.eventHistory.add(new TextInsertEvent(0, area1.getText()));
     }
 
     public int getPort() {
