@@ -32,6 +32,7 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         int myKey = cns.keyOfName(cns.getChordName());
+        dte.setTitle("I'm listening on: " + cns.getChordName().getAddress() + ":" + port);
 
         try {
             // First join
@@ -55,6 +56,7 @@ public class ServerThread implements Runnable {
 
                 DisconnectThread disconnectThread = new DisconnectThread(dte, cns);
                 new Thread(disconnectThread).start();
+                System.out.println("DiscoThread going strong");
 
                 joiningSocket = null;
             }

@@ -73,13 +73,14 @@ public class ChordNameServiceImpl {
             new Thread(disconnectThread).start();
 
             dte.newEventPlayer(sucSocket, myKey);
-
+            System.out.println("Wait for new predecessor");
             // Wait for new predecessor
             ServerSocket server = new ServerSocket(port);//FIXME
             preSocket = server.accept();
+            System.out.println("accepted");
             dte.newEventReplayer(preSocket, myKey);
-
-            // Keep listining for new joins
+            System.out.println("ERP spawned");
+            // Keep listening for new joins
             serverThread = new ServerThread(dte,this,server);
             new Thread(serverThread).start();
         } catch (IOException e) {
