@@ -77,7 +77,13 @@ public class ChordNameServiceImpl {
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
             ServerSocket server = new ServerSocket(port);//FIXME
-            preSocket = server.accept();
+            server.setSoTimeout(1000);
+            try {
+                preSocket = server.accept();
+            }
+            catch ( java.io.InterruptedIOException e1 ) {
+                System.out.println("Time out, must be first time");
+            }
             System.out.println("accepted");
             dte.newEventReplayer(preSocket, myKey);
             System.out.println("ERP spawned");
