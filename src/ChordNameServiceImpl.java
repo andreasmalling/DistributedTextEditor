@@ -57,7 +57,7 @@ public class ChordNameServiceImpl {
 
     public void createGroup(){
         serverThread = new ServerThread(dte,this);
-        new Thread(serverThread).run();
+        new Thread(serverThread).start();
     }
 
     public void joinGroup(InetSocketAddress knownPeer)  {
@@ -70,18 +70,18 @@ public class ChordNameServiceImpl {
 
             // Start listening for disconnects from successor
             disconnectThread = new DisconnectThread(dte,this);
-            new Thread(disconnectThread).run();
+            new Thread(disconnectThread).start();
 
             dte.newEventPlayer(sucSocket, myKey);
 
             // Wait for new predecessor
-            ServerSocket server = new ServerSocket(port);
+            ServerSocket server = new ServerSocket(port);//FIXME
             preSocket = server.accept();
             dte.newEventReplayer(preSocket, myKey);
 
             // Keep listining for new joins
             serverThread = new ServerThread(dte,this,server);
-            new Thread(serverThread).run();
+            new Thread(serverThread).start();
         } catch (IOException e) {
             e.printStackTrace();
         }

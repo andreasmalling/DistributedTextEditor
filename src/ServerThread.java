@@ -47,16 +47,14 @@ public class ServerThread implements Runnable {
 
                 System.out.println(TAG + " spawns ERP");
 
-                //cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
-                cns.setSucSocket(joiningSocket);
-                outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
-                outStream.writeObject(new ConnectEvent());
+                cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));//FIXME
 
                 dte.newEventPlayer(joiningSocket, myKey);
 
                 System.out.println(TAG + " spawns EP");
 
                 DisconnectThread disconnectThread = new DisconnectThread(dte, cns);
+                new Thread(disconnectThread).start();
 
                 joiningSocket = null;
             }
