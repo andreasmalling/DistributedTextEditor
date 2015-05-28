@@ -41,7 +41,7 @@ public class EventPlayer implements Runnable {
                 mte.setId(id);
                 out.writeObject(mte);
             }
-            socket.close();
+            //socket.close();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

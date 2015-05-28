@@ -47,7 +47,7 @@ public class EventReplayer implements Runnable {
                 in = new ObjectInputStream(socket.getInputStream());
                 MyTextEvent mte = null;
                 try {
-                    while ((mte = (MyTextEvent) in.readObject()) != null) {
+                    while ((mte = (MyTextEvent) in.readObject()) != null && running) {
                         mte = jupiterSynchronizer.receive(mte);
                         if (mte instanceof TextInsertEvent) {
                             final TextInsertEvent tie = (TextInsertEvent) mte;
