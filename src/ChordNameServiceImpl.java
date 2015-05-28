@@ -78,20 +78,34 @@ public class ChordNameServiceImpl {
             // Wait for new predecessor
             ServerSocket server = new ServerSocket(port);//FIXME
             server.setSoTimeout(1000);
-            try {
-                preSocket = server.accept();
-            }
-            catch ( java.io.InterruptedIOException e1 ) {
-                System.out.println("Time out, must be first time");
-            }
+            preSocket = server.accept();
             System.out.println("accepted");
+
             dte.newEventReplayer(preSocket, myKey);
             System.out.println("ERP spawned");
             // Keep listening for new joins
             serverThread = new ServerThread(dte,this,server);
             new Thread(serverThread).start();
             System.out.println("serverThread spawned");
-        } catch (IOException e) {
+        }catch ( java.io.InterruptedIOException e1 ) {
+            System.out.println("Time out, must be first time");
+            preSocket = sucSocket;
+            System.out.println("accepted in exception");
+
+            dte.newEventReplayer(preSocket, myKey);
+            System.out.println("ERP spawned in exception");
+            // Keep listening for new joins
+            ServerSocket server = null;
+            try {
+                server = new ServerSocket(port);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            serverThread = new ServerThread(dte,this,server);
+            new Thread(serverThread).start();
+            System.out.println("serverThread spawned in exception");
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
