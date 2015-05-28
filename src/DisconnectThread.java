@@ -30,7 +30,6 @@ public class DisconnectThread implements Runnable {
                     InetAddress newSuccessor = de.getNewSuccessor();
                     cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
                     dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
-                    System.out.println("allahu akbar");
                 }
             }
         } catch (IOException e) {

@@ -67,9 +67,9 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                outStream = new ObjectOutputStream(preSocket.getOutputStream());
+                outStream = new ObjectOutputStream(new Socket(preSocket.getInetAddress(), preSocket.getPort()+1).getOutputStream());
 
-                outStream.writeObject(new DisconnectEvent(preSocket.getInetAddress()));
+                outStream.writeObject(new DisconnectEvent(joiningSocket.getInetAddress()));
                 cns.setPreSocket(joiningSocket);
                 dte.newEventReplayer(cns.getPreSocket(), myKey);
 
