@@ -79,6 +79,7 @@ public class ChordNameServiceImpl {
             serverSocket = new ServerSocket(port);
             serverSocket.setSoTimeout(1000);
             preSocket = serverSocket.accept();
+            serverSocket.setSoTimeout(0);
             System.out.println("accepted");
 
             dte.newEventReplayer(preSocket, myKey);
