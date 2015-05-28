@@ -80,6 +80,7 @@ public class DistributedTextEditor extends JFrame {
             changed = true;
             Save.setEnabled(true);
             SaveAs.setEnabled(true);
+            dec.toggleMakeEvents(true);
         }
     };
 

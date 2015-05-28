@@ -25,6 +25,7 @@ public class DocumentEventCapturer extends DocumentFilter {
      *    we want, as we then don't need to keep asking until there are new elements.
      */
     protected LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<MyTextEvent>();
+    private boolean makeEvents;
 
     /**
      * If the queue is empty, then the call will block until an element arrives.
@@ -41,7 +42,10 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 	
 	/* Queue a copy of the event and then modify the textarea */
-        eventHistory.add(new TextInsertEvent(offset, str));
+        if(makeEvents) {
+            eventHistory.add(new TextInsertEvent(offset, str));
+            toggleMakeEvents(false);
+        }
         super.insertString(fb, offset, str, a);
 
     }
@@ -49,7 +53,10 @@ public class DocumentEventCapturer extends DocumentFilter {
     public void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
 	/* Queue a copy of the event and then modify the textarea */
-        eventHistory.add(new TextRemoveEvent(offset, length));
+        if(makeEvents) {
+            eventHistory.add(new TextRemoveEvent(offset, length));
+            toggleMakeEvents(false);
+        }
         super.remove(fb, offset, length);
     }
 
@@ -59,10 +66,16 @@ public class DocumentEventCapturer extends DocumentFilter {
             throws BadLocationException {
 	
 	/* Queue a copy of the event and then modify the text */
-        if (length > 0) {
-            eventHistory.add(new TextRemoveEvent(offset, length));
+        if (makeEvents) {
+            if (length > 0) {
+                eventHistory.add(new TextRemoveEvent(offset, length));
+            }
             eventHistory.add(new TextInsertEvent(offset, str));
+            toggleMakeEvents(false);
         }
         super.replace(fb, offset, length, str, a);
+    }
+    public void toggleMakeEvents(Boolean bool){
+        makeEvents = bool;
     }
 }
