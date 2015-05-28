@@ -48,16 +48,17 @@ public class ServerThread implements Runnable {
 
                 System.out.println(TAG + " spawns ERP");
 
-                //cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
-                cns.setSucSocket(joiningSocket);
-                outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
-                outStream.writeObject(new ConnectEvent());
+                cns.setSucSocket(new Socket(joiningSocket.getInetAddress(), port));
+                //cns.setSucSocket(joiningSocket);
+                //outStream = new ObjectOutputStream(joiningSocket.getOutputStream());
+                //outStream.writeObject(new ConnectEvent());
 
                 dte.newEventPlayer(joiningSocket, myKey);
 
                 System.out.println(TAG + " spawns EP");
+                ServerSocket hack = new ServerSocket(port+1);
 
-                DisconnectThread disconnectThread = new DisconnectThread(dte, cns, cns.getSucSocket());
+                DisconnectThread disconnectThread = new DisconnectThread(dte, cns, hack.accept());
                 new Thread(disconnectThread).start();
 
                 joiningSocket = null;
@@ -68,7 +69,9 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                //outStream = new ObjectOutputStream(preSocket.getOutputStream());
+                cns.notFirst();
+
+                outStream = new ObjectOutputStream(preSocket.getOutputStream());
 
                 outStream.writeObject(new DisconnectEvent(preSocket.getInetAddress()));
                 preSocket.close();

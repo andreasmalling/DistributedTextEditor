@@ -4,6 +4,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 
 public class ChordNameServiceImpl {
 
@@ -18,6 +19,7 @@ public class ChordNameServiceImpl {
 
     private Socket preSocket, sucSocket;
     private DisconnectThread disconnectThread;
+    private Socket hack;
 
     public Socket getSucSocket() {
         return sucSocket;
@@ -63,33 +65,65 @@ public class ChordNameServiceImpl {
     public void joinGroup(InetSocketAddress knownPeer)  {
         active = true;
         connectedAt = knownPeer;
-
         try {
             // Setup successor
             sucSocket = new Socket(knownPeer.getAddress(),port);
 
-            // Start listening for disconnects from successor
-            disconnectThread = new DisconnectThread(dte,this,sucSocket);
-            new Thread(disconnectThread).start();
 
             dte.newEventPlayer(sucSocket, myKey);
 
             // Wait for new predecessor
             ServerSocket server = new ServerSocket(port);
+            server.setSoTimeout(1000);
             preSocket = server.accept();
+
+            // Start listening for disconnects from successor
+            disconnectThread = new DisconnectThread(dte,this,sucSocket);
+            new Thread(disconnectThread).start();
+
             dte.newEventReplayer(preSocket, myKey);
 
-            // Keep listining for new joins
+            // Keep listening for new joins
             serverThread = new ServerThread(dte,this,server);
             new Thread(serverThread).start();
-        } catch (IOException e) {
+
+        }
+        catch (SocketException e1){
+            try {
+                first = true;
+                preSocket = sucSocket;
+                dte.newEventReplayer(preSocket, myKey);
+                hack = new Socket(preSocket.getInetAddress(), port+1);
+
+                // Start listening for disconnects from successor
+                disconnectThread = new DisconnectThread(dte,this,hack);
+                new Thread(disconnectThread).start();
+
+                // Keep listening for new joins
+                ServerSocket server = new ServerSocket(port);
+                serverThread = new ServerThread(dte,this,server);
+                new Thread(serverThread).start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
+    public void notFirst(){
+        first = false;
+    }
 
     public void leaveGroup() {
+
         try {
-            ObjectOutputStream disconnectStream = new ObjectOutputStream(preSocket.getOutputStream());
+            ObjectOutputStream disconnectStream = null;
+            if (first) {
+                disconnectStream = new ObjectOutputStream(hack.getOutputStream());
+            } else
+                disconnectStream = new ObjectOutputStream(preSocket.getOutputStream());
+
             disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
             preSocket.close();
             sucSocket.close();

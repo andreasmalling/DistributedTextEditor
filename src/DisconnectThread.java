@@ -18,6 +18,11 @@ public class DisconnectThread implements Runnable {
     @Override
     public void run() {
         try {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             while(true) {
                 ObjectInputStream disconnectStream = new ObjectInputStream(socket.getInputStream());
                 Object de;
