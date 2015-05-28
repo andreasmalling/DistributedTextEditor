@@ -244,9 +244,9 @@ public class DistributedTextEditor extends JFrame {
         er.terminate();
     }
 
-    public void sendRipEvent(){
+    public void sendRipEvent(boolean only2inChord){
         try {
-            dec.eventHistory.put(new RipEvent());
+            dec.eventHistory.put(new RipEvent(only2inChord));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

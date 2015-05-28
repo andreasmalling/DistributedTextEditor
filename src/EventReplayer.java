@@ -70,9 +70,15 @@ public class EventReplayer implements Runnable {
                             });
                         } else if (mte instanceof RipEvent) {
                             System.out.println("ERP Received RipEvent");
-                            terminate();
-                            socket.close();
-                            break;
+                            if (((RipEvent) mte).isOnly2inChord()){
+                                distributedTextEditor.sendRipEvent(false);
+                                terminate();
+                            }
+                            else{
+                                terminate();
+                                socket.close();
+                            }
+                            break; //break burde være unødvendig. For en sikkerheds skyld
                         }
                     }
                 } catch (Exception _) {

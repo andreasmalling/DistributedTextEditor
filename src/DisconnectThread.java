@@ -28,7 +28,7 @@ public class DisconnectThread implements Runnable {
                 while ((de = (DisconnectEvent) disconnectStream.readObject()) != null) {
                     //if Disconnect button is pressed, shut down
                     if (cns.isLeaving()) {//et RipEvent blev sendt ud af predecessoren, så EventReplayer er lukket
-                        dte.sendRipEvent(); //RipEvent lukker egen EventPlayer... lidt i tvivl her. Successor burde have oprettet en ny EventReplayer på en anden socket
+                        dte.sendRipEvent(false); //RipEvent lukker egen EventPlayer... lidt i tvivl her. Successor burde have oprettet en ny EventReplayer på en anden socket
                         //dte.killEventPlayer();
                         //dte.killEventReplayer();
                         disconnectingSocket.close();
@@ -38,7 +38,7 @@ public class DisconnectThread implements Runnable {
                     }
                     //else it is a soft disc when a node wants to join chord
                     else {
-                        dte.sendRipEvent();
+                        dte.sendRipEvent(false);
                         InetAddress newSuccessor = de.getNewSuccessor();
                         cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
                         dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
