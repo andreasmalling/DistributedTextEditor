@@ -6,18 +6,16 @@ import java.net.Socket;
 public class EventPlayer implements Runnable {
 
     private JupiterSynchronizer jupiterSynchronizer;
-    private int id;
     private DistributedTextEditor distributedTextEditor;
     private Socket socket;
     private DocumentEventCapturer dec;
     private boolean running = true;
     private ObjectOutputStream out;
 
-    public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor, int id, JupiterSynchronizer jupiterSynchronizer) {
+    public EventPlayer(Socket socket, DocumentEventCapturer dec, DistributedTextEditor distributedTextEditor, JupiterSynchronizer jupiterSynchronizer) {
         this.dec = dec;
         this.socket = socket;
         this.distributedTextEditor = distributedTextEditor;
-        this.id = id;
         this.jupiterSynchronizer = jupiterSynchronizer;
     }
 
@@ -27,11 +25,14 @@ public class EventPlayer implements Runnable {
             System.out.println("EP " + socket.toString());
             while (running) {
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
-                MyTextEvent mte = dec.take();
-                mte = jupiterSynchronizer.generate(mte);
-                mte.setId(id);
-                out.writeObject(mte);
-                if(mte instanceof RipEvent){
+                MyTextEvent ownMTE = dec.take();
+                ownMTE = jupiterSynchronizer.generate(ownMTE);
+                out.writeObject(ownMTE);
+
+                MyTextEvent otherMTE = (MyTextEvent) distributedTextEditor.getDirectLine().take();
+                otherMTE = jupiterSynchronizer.generate(otherMTE);
+                out.writeObject(otherMTE);
+                if(otherMTE instanceof RipEvent){
                     System.out.println("EP Received RipEvent");
                     terminate();
                 }

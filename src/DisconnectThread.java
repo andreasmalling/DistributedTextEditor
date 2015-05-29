@@ -41,7 +41,7 @@ public class DisconnectThread implements Runnable {
                         dte.sendRipEvent(false);
                         InetAddress newSuccessor = de.getNewSuccessor();
                         cns.setSucSocket(new Socket(newSuccessor, cns.getChordName().getPort()));
-                        dte.newEventPlayer(cns.getSucSocket(), cns.keyOfName(cns.getChordName()));
+                        dte.newEventPlayer(cns.getSucSocket());
                         dte.sendAllText();
                         System.out.println("Connected to new peer");
                     }

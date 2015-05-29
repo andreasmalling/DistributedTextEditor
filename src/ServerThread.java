@@ -32,7 +32,6 @@ public class ServerThread implements Runnable {
 
     @Override
     public void run() {
-        int myKey = cns.keyOfName(cns.getChordName());
         dte.setTitle("I'm listening on: " + cns.getChordName().getAddress() + ":" + port);
 
         try {
@@ -45,13 +44,13 @@ public class ServerThread implements Runnable {
                 System.out.println(TAG + " has one friend");
 
                 cns.setPreSocket(joiningSocket);
-                dte.newEventReplayer(joiningSocket, myKey);
+                dte.newEventReplayer(joiningSocket);
 
                 System.out.println(TAG + " spawns ERP");
 
                 cns.setSucSocket(joiningSocket);
 
-                dte.newEventPlayer(joiningSocket, myKey);
+                dte.newEventPlayer(joiningSocket);
 
                 System.out.println(TAG + " spawns EP");
 
@@ -73,7 +72,7 @@ public class ServerThread implements Runnable {
                 outStream.writeObject(new DisconnectEvent(joiningSocket.getInetAddress()));
                 System.out.println("Sent");
                 cns.setPreSocket(joiningSocket);
-                dte.newEventReplayer(cns.getPreSocket(), myKey);
+                dte.newEventReplayer(cns.getPreSocket());
 
                 joiningSocket = null;
             }

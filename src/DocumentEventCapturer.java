@@ -26,6 +26,7 @@ public class DocumentEventCapturer extends DocumentFilter {
      */
     protected LinkedBlockingQueue<MyTextEvent> eventHistory = new LinkedBlockingQueue<MyTextEvent>();
     private boolean makeEvents;
+    private int id;
 
     /**
      * If the queue is empty, then the call will block until an element arrives.
@@ -37,30 +38,34 @@ public class DocumentEventCapturer extends DocumentFilter {
         return eventHistory.take();
     }
 
-    public void insertString(FilterBypass fb, int offset,
+    public synchronized void insertString(FilterBypass fb, int offset,
                              String str, AttributeSet a)
             throws BadLocationException {
 	
 	/* Queue a copy of the event and then modify the textarea */
         if(makeEvents) {
-            eventHistory.add(new TextInsertEvent(offset, str));
+            TextInsertEvent tie = new TextInsertEvent(offset, str);
+            tie.setId(id);
+            eventHistory.add(tie);
             toggleMakeEvents(false);
         }
         super.insertString(fb, offset, str, a);
 
     }
 
-    public void remove(FilterBypass fb, int offset, int length)
+    public synchronized void remove(FilterBypass fb, int offset, int length)
             throws BadLocationException {
 	/* Queue a copy of the event and then modify the textarea */
         if(makeEvents) {
-            eventHistory.add(new TextRemoveEvent(offset, length));
+            TextRemoveEvent tre = new TextRemoveEvent(offset, length);
+            tre.setId(id);
+            eventHistory.add(tre);
             toggleMakeEvents(false);
         }
         super.remove(fb, offset, length);
     }
 
-    public void replace(FilterBypass fb, int offset,
+    public synchronized void replace(FilterBypass fb, int offset,
                         int length,
                         String str, AttributeSet a)
             throws BadLocationException {
@@ -68,14 +73,22 @@ public class DocumentEventCapturer extends DocumentFilter {
 	/* Queue a copy of the event and then modify the text */
         if (makeEvents) {
             if (length > 0) {
-                eventHistory.add(new TextRemoveEvent(offset, length));
+                TextRemoveEvent tre = new TextRemoveEvent(offset, length);
+                tre.setId(id);
+                eventHistory.add(tre);
             }
-            eventHistory.add(new TextInsertEvent(offset, str));
+            TextInsertEvent tie = new TextInsertEvent(offset, str);
+            tie.setId(id);
+            eventHistory.add(tie);
             toggleMakeEvents(false);
         }
         super.replace(fb, offset, length, str, a);
     }
     public void toggleMakeEvents(Boolean bool){
         makeEvents = bool;
+    }
+
+    public void setId(int id){
+        this.id = id;
     }
 }

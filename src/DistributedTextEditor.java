@@ -5,6 +5,7 @@ import java.io.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.net.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
 
@@ -22,9 +23,12 @@ public class DistributedTextEditor extends JFrame {
 
     private JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
+    private LinkedBlockingQueue<MyTextEvent> directLine = new LinkedBlockingQueue<MyTextEvent>();
+
     private ChordNameServiceImpl chordNameService;
     private EventPlayer ep = null;
     private EventReplayer er = null;
+    private int id;
 
     public DistributedTextEditor() {
         area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -32,7 +36,7 @@ public class DistributedTextEditor extends JFrame {
 
         Container content = getContentPane();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-        
+
         JScrollPane scroll1 =
                 new JScrollPane(area1,
                         JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
@@ -136,6 +140,20 @@ public class DistributedTextEditor extends JFrame {
         return null;
     }
 
+    public int keyOfName(InetSocketAddress name)  {
+        int tmp = name.hashCode()*1073741651 % 2147483647;
+        if (tmp < 0) { tmp = -tmp; }
+        return tmp;
+    }
+
+    public int getId(){
+        return id;
+    }
+
+    public LinkedBlockingQueue getDirectLine(){
+        return directLine;
+    }
+
     Action Listen = new AbstractAction("Listen") {
         public void actionPerformed(ActionEvent e) {
             listen();
@@ -150,6 +168,8 @@ public class DistributedTextEditor extends JFrame {
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
         InetSocketAddress name = _getMyName();
+        id = keyOfName(name);
+        dec.setId(id);
 
         chordNameService = new ChordNameServiceImpl(name, this);
         chordNameService.createGroup();
@@ -168,13 +188,14 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
+        InetSocketAddress name = _getMyName();
+        id = keyOfName(name);
+        dec.setId(id);
 
         //Connect with a listening DistributedTextEditor
         String address = ipaddress.getText();
         int port = Integer.parseInt(portNumber.getText());
         InetSocketAddress knownPeer = new InetSocketAddress(address, port);
-
-        InetSocketAddress name = _getMyName();
 
         chordNameService = new ChordNameServiceImpl(name, this);
         chordNameService.joinGroup(knownPeer);
@@ -240,16 +261,16 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    public void newEventPlayer(Socket socket, int id){
+    public void newEventPlayer(Socket socket){
         if (ep == null) {
             System.out.println("EP: i am null");
-            ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
+            ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
         } else{
             System.out.println("EP not null");
             //killEventPlayer();
-            ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
+            ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
         }
@@ -259,7 +280,7 @@ public class DistributedTextEditor extends JFrame {
         ep.terminate();
     }
 
-    public void newEventReplayer(Socket socket, int id){
+    public void newEventReplayer(Socket socket){
         if(er == null) {
             System.out.println("ERP: i am null");
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
@@ -280,7 +301,7 @@ public class DistributedTextEditor extends JFrame {
 
     public void sendRipEvent(boolean only2inChord){
         try {
-            dec.eventHistory.put(new RipEvent(only2inChord));
+            directLine.put(new RipEvent(only2inChord));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -288,7 +309,7 @@ public class DistributedTextEditor extends JFrame {
 
     public void sendAllText(){
         try {
-            dec.eventHistory.put(new TextInsertEvent(0, area1.getText()));
+            directLine.put(new AllTextEvent(area1.getText()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

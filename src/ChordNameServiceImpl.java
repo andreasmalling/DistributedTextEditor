@@ -39,11 +39,7 @@ public class ChordNameServiceImpl {
         this.dte = dte;
     }
 
-    public int keyOfName(InetSocketAddress name)  {
-        int tmp = name.hashCode()*1073741651 % 2147483647;
-        if (tmp < 0) { tmp = -tmp; }
-        return tmp;
-    }
+
 
     public InetSocketAddress getChordName()  {
         return myName;
@@ -65,7 +61,7 @@ public class ChordNameServiceImpl {
             new Thread(disconnectThread).start();
 
             System.out.println("EP spawned");
-            dte.newEventPlayer(sucSocket, myKey);
+            dte.newEventPlayer(sucSocket);
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
             serverSocket = new ServerSocket(port);
@@ -74,7 +70,7 @@ public class ChordNameServiceImpl {
             serverSocket.setSoTimeout(0);
             System.out.println("accepted");
 
-            dte.newEventReplayer(preSocket, myKey);
+            dte.newEventReplayer(preSocket);
             System.out.println("ERP spawned");
             // Keep listening for new joins
             serverThread = new ServerThread(dte,this,serverSocket);
@@ -85,7 +81,7 @@ public class ChordNameServiceImpl {
             preSocket = sucSocket;
             System.out.println("accepted in exception");
 
-            dte.newEventReplayer(preSocket, myKey);
+            dte.newEventReplayer(preSocket);
             System.out.println("ERP spawned in exception");
             // Keep listening for new joins
             try {

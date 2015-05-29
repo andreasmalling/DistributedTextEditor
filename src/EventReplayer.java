@@ -45,7 +45,10 @@ public class EventReplayer implements Runnable {
                             EventQueue.invokeLater(new Runnable() {
                                 public void run() {
                                     try {
-                                        area.insert(tie.getText(), tie.getOffset());
+                                        if(tie.getId()!=distributedTextEditor.getId()){
+                                            area.insert(tie.getText(), tie.getOffset());
+                                            distributedTextEditor.getDirectLine().add(tie);
+                                        }
                                     } catch (Exception e) {
                                         System.err.println(e);
 				    /* We catch all axceptions, as an uncaught exception would make the
@@ -59,7 +62,10 @@ public class EventReplayer implements Runnable {
                             EventQueue.invokeLater(new Runnable() {
                                 public void run() {
                                     try {
-                                        area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                                        if(tre.getId()!=distributedTextEditor.getId()) {
+                                            area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
+                                            distributedTextEditor.getDirectLine().add(tre);
+                                        }
                                     } catch (Exception e) {
                                         System.err.println(e);
 				    /* We catch all axceptions, as an uncaught exception would make the
@@ -68,7 +74,22 @@ public class EventReplayer implements Runnable {
                                     }
                                 }
                             });
-                        } else if (mte instanceof RipEvent) {
+                        } else if (mte instanceof AllTextEvent) {
+                            final AllTextEvent ate = (AllTextEvent) mte;
+                            EventQueue.invokeLater(new Runnable() {
+                                public void run() {
+                                    try {
+                                        area.insert(ate.getText(), ate.getOffset());
+                                    } catch (Exception e) {
+                                        System.err.println(e);
+				    /* We catch all axceptions, as an uncaught exception would make the
+				     * EDT unwind, which is now healthy.
+				     */
+                                    }
+                                }
+                            });
+                        }
+                        else if (mte instanceof RipEvent) {
                             System.out.println("ERP Received RipEvent");
                             if (((RipEvent) mte).isOnly2inChord()){
                                 distributedTextEditor.sendRipEvent(false);
