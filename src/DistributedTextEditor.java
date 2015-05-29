@@ -124,26 +124,11 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    /**
-     * Computes the name of this peer by resolving the local host name
-     * and adding the current portname.
-     */
-    protected InetSocketAddress _getMyName() {
-        try {
-            InetAddress localhost = InetAddress.getLocalHost();
-            InetSocketAddress name = new InetSocketAddress(localhost, Integer.parseInt(portNumber.getText()));
-            return name;
-        } catch (UnknownHostException e) {
-            System.err.println("Cannot resolve the Internet address of the local host.");
-            System.err.println(e);
-        }
-        return null;
-    }
-
-    public int keyOfName(InetSocketAddress name)  {
+    public void setKeyOfNameToId(InetSocketAddress name)  {
         int tmp = name.hashCode()*1073741651 % 2147483647;
         if (tmp < 0) { tmp = -tmp; }
-        return tmp;
+        id = tmp;
+        dec.setId(id);
     }
 
     public int getId(){
@@ -167,9 +152,13 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
-        InetSocketAddress name = _getMyName();
-        id = keyOfName(name);
-        dec.setId(id);
+        InetSocketAddress name = null;
+        try {
+            name = new InetSocketAddress(InetAddress.getLocalHost(), Integer.parseInt(portNumber.getText()));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        setKeyOfNameToId(name);
 
         chordNameService = new ChordNameServiceImpl(name, this);
         chordNameService.createGroup();
@@ -180,7 +169,6 @@ public class DistributedTextEditor extends JFrame {
             connect();
         }
     };
-
     public void connect(){
         //Prepare editor for connection
         saveOld();
@@ -188,16 +176,12 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
-        InetSocketAddress name = _getMyName();
-        id = keyOfName(name);
-        dec.setId(id);
-
         //Connect with a listening DistributedTextEditor
         String address = ipaddress.getText();
         int port = Integer.parseInt(portNumber.getText());
         InetSocketAddress knownPeer = new InetSocketAddress(address, port);
 
-        chordNameService = new ChordNameServiceImpl(name, this);
+        chordNameService = new ChordNameServiceImpl(this);
         chordNameService.joinGroup(knownPeer);
     }
 
@@ -261,52 +245,32 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    public void newEventPlayer(Socket socket){
-        if(ep == null) {
-            System.out.println("new EP method, null");
+    public void newEventPlayer(Socket socket) {
+            System.out.println("new EP method");
             ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
-        }
-        else {
-            System.out.println("new EP method, null");
-            ep.terminate();
-            ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
-            Thread ept = new Thread(ep);
-            ept.start();
-        }
-    }
-
-    public void killEventPlayer(){
-        ep.terminate();
     }
 
 
     public void newEventReplayer(Socket socket){
-        if(er==null) {
             System.out.println("new ERP method");
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
             Thread ert = new Thread(er);
             ert.start();
-        }
-        else{
-            System.out.println("new ERP method");
-            er.terminate();
-            er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
-            Thread ert = new Thread(er);
-            ert.start();
-        }
     }
 
-    public void killEventReplayer(){
-        er.terminate();
+    public void sendRipEvent(boolean only2inChord){
+        try {
+            directLine.put(new RipEvent(only2inChord));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
-
 
     public void sendAllText(){
         try {
-            //directLine.put(new AllTextEvent(area1.getText()));
-            dec.eventHistory.put(new AllTextEvent(area1.getText()));
+            directLine.put(new AllTextEvent(area1.getText()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

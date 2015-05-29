@@ -1,7 +1,5 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -20,19 +18,20 @@ public class ServerThread implements Runnable {
     public ServerThread(DistributedTextEditor dte, ChordNameServiceImpl cns) {
         this.dte = dte;
         this.cns = cns;
-        port = cns.getChordName().getPort();
+        port = cns.getMyName().getPort();
     }
 
     public ServerThread(DistributedTextEditor dte, ChordNameServiceImpl cns, ServerSocket ss) {
         this.dte = dte;
         this.cns = cns;
-        port = cns.getChordName().getPort();
+        port = cns.getMyName().getPort();
         server = ss;
     }
 
     @Override
     public void run() {
-        dte.setTitle("I'm listening on: " + cns.getChordName().getAddress() + ":" + port);
+        String ipaddress = cns.getMyName().getAddress().getHostAddress();
+        dte.setTitle("I'm listening on: " + ipaddress + ":" + port);
 
         try {
             // First join
@@ -67,10 +66,11 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                Socket discoSocket = new Socket(preSocket.getInetAddress(), port+1);
-                outStream = new ObjectOutputStream(discoSocket.getOutputStream());
+                outStream = new ObjectOutputStream(new Socket(preSocket.getInetAddress(), preSocket.getPort()+1).getOutputStream());
                 System.out.println("Sending disconnectEvent...");
-                outStream.writeObject(new DisconnectEvent(joiningSocket.getInetAddress()));
+
+                InetSocketAddress joiningAddress = new InetSocketAddress(joiningSocket.getInetAddress(), joiningSocket.getPort());
+                outStream.writeObject(new DisconnectEvent(joiningAddress));
                 System.out.println("Sent");
                 cns.setPreSocket(joiningSocket);
                 dte.newEventReplayer(cns.getPreSocket());

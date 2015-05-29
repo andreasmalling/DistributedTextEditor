@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,7 +10,6 @@ public class ChordNameServiceImpl {
     private DistributedTextEditor dte;
     private int port;
     protected InetSocketAddress myName;
-    protected int myKey;
     private ServerSocket serverSocket;
 
     private Socket preSocket, sucSocket;
@@ -38,10 +38,11 @@ public class ChordNameServiceImpl {
         this.port = myName.getPort();
         this.dte = dte;
     }
+    public ChordNameServiceImpl(DistributedTextEditor dte){
+        this.dte = dte;
+    }
 
-
-
-    public InetSocketAddress getChordName()  {
+    public InetSocketAddress getMyName()  {
         return myName;
     }
 
@@ -54,8 +55,17 @@ public class ChordNameServiceImpl {
 
         try {
             // Setup successor
-            sucSocket = new Socket(knownPeer.getAddress(),port);
-
+            sucSocket = new Socket(knownPeer.getAddress(), knownPeer.getPort());
+            port = sucSocket.getLocalPort();
+            InetSocketAddress name = null;
+            try {
+                InetAddress localhost = InetAddress.getLocalHost();
+                name = new InetSocketAddress(localhost, port);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            myName = name;
+            dte.setKeyOfNameToId(myName);
             // Start listening for disconnects from successor
             DisconnectThread disconnectThread = new DisconnectThread(dte, this);
             new Thread(disconnectThread).start();
@@ -65,7 +75,7 @@ public class ChordNameServiceImpl {
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
             serverSocket = new ServerSocket(port);
-            serverSocket.setSoTimeout(3000);
+            serverSocket.setSoTimeout(1000);
             preSocket = serverSocket.accept();
             serverSocket.setSoTimeout(0);
             System.out.println("accepted");
@@ -100,10 +110,15 @@ public class ChordNameServiceImpl {
     }
 
     public void leaveGroup() {
+        //When only 2 are in chord, suc and pre are the same
+        if(sucSocket.equals(preSocket)){
+            dte.sendRipEvent(true);
+        }
         try {
             Socket socket = new Socket(preSocket.getInetAddress(), port+1);
             ObjectOutputStream disconnectStream = new ObjectOutputStream(socket.getOutputStream());
-            disconnectStream.writeObject(new DisconnectEvent(sucSocket.getInetAddress()));
+            InetSocketAddress successorAddress = new InetSocketAddress(sucSocket.getInetAddress(), sucSocket.getPort());
+            disconnectStream.writeObject(new DisconnectEvent(successorAddress));
             leaving = true;
 
         } catch (IOException e) {
