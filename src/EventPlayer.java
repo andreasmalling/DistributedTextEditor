@@ -45,20 +45,16 @@ public class EventPlayer implements Runnable {
                // }).start();
                 //Thread that sends all other events
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
-                MyTextEvent otherMTE = null;
+                /**MyTextEvent otherMTE = null;
                 try {
                     System.out.println("EP TAKING OTHER");
                     otherMTE = (MyTextEvent) directLine.take();
                     System.out.println("EP DONE TAKING OTHER");
                     otherMTE = jupiterSynchronizer.generate(otherMTE);
                     out.writeObject(otherMTE);
-                    if (otherMTE instanceof RipEvent) {
-                        System.out.println("EP Received RipEvent");
-                        terminate();
-                    }
                 } catch (InterruptedException | IOException e) {
                     e.printStackTrace();
-                }
+                }*/
 
             }
         } catch (IOException  e) {

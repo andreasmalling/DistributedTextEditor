@@ -100,10 +100,6 @@ public class ChordNameServiceImpl {
     }
 
     public void leaveGroup() {
-        //When only 2 are in chord, suc and pre are the same
-        if(sucSocket.equals(preSocket)){
-            dte.sendRipEvent(true);
-        }
         try {
             Socket socket = new Socket(preSocket.getInetAddress(), port+1);
             ObjectOutputStream disconnectStream = new ObjectOutputStream(socket.getOutputStream());

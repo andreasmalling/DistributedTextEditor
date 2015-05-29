@@ -262,31 +262,51 @@ public class DistributedTextEditor extends JFrame {
     }
 
     public void newEventPlayer(Socket socket){
-            System.out.println("new WP method");
+        if(ep == null) {
+            System.out.println("new EP method, null");
             ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
+        }
+        else {
+            System.out.println("new EP method, null");
+            ep.terminate();
+            ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
+            Thread ept = new Thread(ep);
+            ept.start();
+        }
+    }
+
+    public void killEventPlayer(){
+        ep.terminate();
     }
 
 
     public void newEventReplayer(Socket socket){
+        if(er==null) {
             System.out.println("new ERP method");
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
             Thread ert = new Thread(er);
             ert.start();
-    }
-
-    public void sendRipEvent(boolean only2inChord){
-        try {
-            directLine.put(new RipEvent(only2inChord));
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        }
+        else{
+            System.out.println("new ERP method");
+            er.terminate();
+            er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
+            Thread ert = new Thread(er);
+            ert.start();
         }
     }
 
+    public void killEventReplayer(){
+        er.terminate();
+    }
+
+
     public void sendAllText(){
         try {
-            directLine.put(new AllTextEvent(area1.getText()));
+            //directLine.put(new AllTextEvent(area1.getText()));
+            dec.eventHistory.put(new AllTextEvent(area1.getText()));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
