@@ -4,6 +4,7 @@ import java.awt.EventQueue;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
@@ -36,6 +37,8 @@ public class EventReplayer implements Runnable {
             System.out.println("ERP " + socket.toString());
             while (running) {
                 in = new ObjectInputStream(socket.getInputStream());
+                LinkedBlockingQueue directLine = distributedTextEditor.getDirectLine();
+                int dteId = distributedTextEditor.getId();
                 MyTextEvent mte = null;
                 try {
                     while ((mte = (MyTextEvent) in.readObject()) != null && running) {
@@ -45,9 +48,9 @@ public class EventReplayer implements Runnable {
                             EventQueue.invokeLater(new Runnable() {
                                 public void run() {
                                     try {
-                                        if(tie.getId()!=distributedTextEditor.getId()){
+                                        if(tie.getId()!=dteId){
                                             area.insert(tie.getText(), tie.getOffset());
-                                            distributedTextEditor.getDirectLine().add(tie);
+                                            directLine.add(tie);
                                         }
                                     } catch (Exception e) {
                                         System.err.println(e);
@@ -62,9 +65,9 @@ public class EventReplayer implements Runnable {
                             EventQueue.invokeLater(new Runnable() {
                                 public void run() {
                                     try {
-                                        if(tre.getId()!=distributedTextEditor.getId()) {
+                                        if(tre.getId()!=dteId) {
                                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
-                                            distributedTextEditor.getDirectLine().add(tre);
+                                            directLine.add(tre);
                                         }
                                     } catch (Exception e) {
                                         System.err.println(e);

@@ -1,7 +1,9 @@
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class EventPlayer implements Runnable {
 
@@ -23,10 +25,10 @@ public class EventPlayer implements Runnable {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             System.out.println("EP " + socket.toString());
+            LinkedBlockingQueue directLine = distributedTextEditor.getDirectLine();
             //Thread that sends on own events
             while (running) {
-                new Thread(new Runnable() {
-                    @Override
+                EventQueue.invokeLater(new Runnable() {
                     public void run() {
                         //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                         MyTextEvent ownMTE = null;
@@ -38,14 +40,14 @@ public class EventPlayer implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                });
                 //Thread that sends all other events
-                new Thread(new Runnable() {
-                    @Override
+                EventQueue.invokeLater(new Runnable() {
                     public void run() {
                         //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
+                        MyTextEvent otherMTE = null;
                         try {
-                            MyTextEvent otherMTE = (MyTextEvent) distributedTextEditor.getDirectLine().take();
+                            otherMTE = (MyTextEvent) directLine.take();
                             otherMTE = jupiterSynchronizer.generate(otherMTE);
                             out.writeObject(otherMTE);
                             if(otherMTE instanceof RipEvent){
@@ -56,7 +58,7 @@ public class EventPlayer implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                });
             }
         } catch (IOException  e) {
             e.printStackTrace();

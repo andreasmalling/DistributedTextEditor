@@ -23,7 +23,7 @@ public class DistributedTextEditor extends JFrame {
 
     private JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
-    private LinkedBlockingQueue<MyTextEvent> directLine = new LinkedBlockingQueue<MyTextEvent>();
+    protected LinkedBlockingQueue<MyTextEvent> directLine = new LinkedBlockingQueue<MyTextEvent>();
 
     private ChordNameServiceImpl chordNameService;
     private EventPlayer ep = null;
@@ -262,41 +262,18 @@ public class DistributedTextEditor extends JFrame {
     }
 
     public void newEventPlayer(Socket socket){
-        if (ep == null) {
-            System.out.println("EP: i am null");
+            System.out.println("new WP method");
             ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
-        } else{
-            System.out.println("EP not null");
-            //killEventPlayer();
-            ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
-            Thread ept = new Thread(ep);
-            ept.start();
-        }
     }
 
-    public void killEventPlayer(){
-        ep.terminate();
-    }
 
     public void newEventReplayer(Socket socket){
-        if(er == null) {
-            System.out.println("ERP: i am null");
+            System.out.println("new ERP method");
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
             Thread ert = new Thread(er);
             ert.start();
-        } else {
-            System.out.println("ERP not null");
-            //killEventReplayer();
-            er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
-            Thread ert = new Thread(er);
-            ert.start();
-        }
-    }
-
-    public void killEventReplayer(){
-        er.terminate();
     }
 
     public void sendRipEvent(boolean only2inChord){
