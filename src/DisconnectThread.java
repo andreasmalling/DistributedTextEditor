@@ -34,6 +34,7 @@ public class DisconnectThread implements Runnable {
                         disconnectingSocket.close();
                         cns.getSucSocket().close();
                         cns.getPreSocket().close();
+                        server.close();
                     }
                     //else it is a soft disc when a node wants to join chord
                     else {
