@@ -28,7 +28,7 @@ public class EventPlayer implements Runnable {
             LinkedBlockingQueue directLine = distributedTextEditor.getDirectLine();
             //Thread that sends on own events
             while (running) {
-               new Thread(new Runnable() {
+                EventQueue.invokeLater(new Runnable() {
                     public void run() {
                         //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                         MyTextEvent ownMTE = null;
@@ -42,27 +42,24 @@ public class EventPlayer implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                });
                 //Thread that sends all other events
-                new Thread(new Runnable() {
-                    public void run() {
-                        //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
-                        MyTextEvent otherMTE = null;
-                        try {
-                            System.out.println("EP TAKING OTHER");
-                            otherMTE = (MyTextEvent) directLine.take();
-                            System.out.println("EP DONE TAKING OTHER");
-                            otherMTE = jupiterSynchronizer.generate(otherMTE);
-                            out.writeObject(otherMTE);
-                            if (otherMTE instanceof RipEvent) {
-                                System.out.println("EP Received RipEvent");
-                                terminate();
-                            }
-                        } catch (InterruptedException | IOException e) {
-                            e.printStackTrace();
-                        }
+                //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
+                MyTextEvent otherMTE = null;
+                try {
+                    System.out.println("EP TAKING OTHER");
+                    otherMTE = (MyTextEvent) directLine.take();
+                    System.out.println("EP DONE TAKING OTHER");
+                    otherMTE = jupiterSynchronizer.generate(otherMTE);
+                    out.writeObject(otherMTE);
+                    if (otherMTE instanceof RipEvent) {
+                        System.out.println("EP Received RipEvent");
+                        terminate();
                     }
-                }).start();
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+
             }
         } catch (IOException  e) {
             e.printStackTrace();
