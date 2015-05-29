@@ -67,7 +67,8 @@ public class ServerThread implements Runnable {
 
                 Socket preSocket = cns.getPreSocket();
 
-                outStream = new ObjectOutputStream(new Socket(preSocket.getInetAddress(), port+1).getOutputStream());
+                Socket discoSocket = new Socket(preSocket.getInetAddress(), port+1);
+                outStream = new ObjectOutputStream(discoSocket.getOutputStream());
                 System.out.println("Sending disconnectEvent...");
                 outStream.writeObject(new DisconnectEvent(joiningSocket.getInetAddress()));
                 System.out.println("Sent");

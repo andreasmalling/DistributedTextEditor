@@ -65,7 +65,7 @@ public class ChordNameServiceImpl {
             System.out.println("Wait for new predecessor");
             // Wait for new predecessor
             serverSocket = new ServerSocket(port);
-            serverSocket.setSoTimeout(1000);
+            serverSocket.setSoTimeout(3000);
             preSocket = serverSocket.accept();
             serverSocket.setSoTimeout(0);
             System.out.println("accepted");
