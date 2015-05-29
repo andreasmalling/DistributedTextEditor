@@ -5,6 +5,7 @@ import java.io.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.net.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class DistributedTextEditor extends JFrame {
 
@@ -22,12 +23,15 @@ public class DistributedTextEditor extends JFrame {
 
     private JupiterSynchronizer jupiterSynchronizer = new JupiterSynchronizer();
 
+    protected LinkedBlockingQueue<MyTextEvent> directLine = new LinkedBlockingQueue<MyTextEvent>();
+
     private ChordNameServiceImpl chordNameService;
     private EventPlayer ep = null;
     private EventReplayer er = null;
+    private int id;
 
     public DistributedTextEditor() {
-        area1.setFont(new Font("Monospaced",Font.PLAIN,12));
+        area1.setFont(new Font("Monospaced", Font.PLAIN, 12));
         ((AbstractDocument)area1.getDocument()).setDocumentFilter(dec);
 
         Container content = getContentPane();
@@ -37,15 +41,51 @@ public class DistributedTextEditor extends JFrame {
                 new JScrollPane(area1,
                         JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                         JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        content.add(scroll1,BorderLayout.CENTER);
+        content.add(scroll1, BorderLayout.CENTER);
+        scroll1.setBackground(Color.RED);
 
-        content.add(ipaddress,BorderLayout.CENTER);
-        content.add(portNumber,BorderLayout.CENTER);
+        content.add(ipaddress, BorderLayout.CENTER);
+        ipaddress.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        ipaddress.setForeground(Color.RED);
+        ipaddress.setBackground(Color.GREEN);
+        content.add(portNumber, BorderLayout.CENTER);
+        portNumber.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        portNumber.setForeground(Color.RED);
+        portNumber.setBackground(Color.GREEN);
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bottom.setBackground(Color.CYAN);
+
+        JButton listen = new JButton("Listen");
+        JButton connect = new JButton("Connect");
+        JButton disconnect = new JButton("Disconnect");
+
+        bottom.add(listen);
+        bottom.add(Box.createHorizontalStrut(5));
+        bottom.add(connect);
+        bottom.add(Box.createHorizontalStrut(575));
+        bottom.add(disconnect);
+        content.add(bottom);
+        listen.addActionListener(Listen);
+        connect.addActionListener(Connect);
+        disconnect.addActionListener(Disconnect);
+
+        listen.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        listen.setForeground(Color.MAGENTA);
+        connect.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        connect.setForeground(Color.MAGENTA);
+        disconnect.setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        disconnect.setForeground(Color.MAGENTA);
 
         JMenuBar JMB = new JMenuBar();
+        JMB.setBackground(Color.BLUE);
         setJMenuBar(JMB);
         JMenu file = new JMenu("File");
+        file.setFont(new Font("Comic Sans MS", Font.ITALIC, 14));
+        file.setForeground(Color.GREEN);
         JMenu edit = new JMenu("Edit");
+        edit.setFont(new Font("Comic Sans MS", Font.ITALIC, 14));
+        edit.setForeground(Color.GREEN);
         JMB.add(file);
         JMB.add(edit);
 
@@ -84,20 +124,19 @@ public class DistributedTextEditor extends JFrame {
         }
     };
 
-    /**
-     * Computes the name of this peer by resolving the local host name
-     * and adding the current portname.
-     */
-    protected InetSocketAddress _getMyName() {
-        try {
-            InetAddress localhost = InetAddress.getLocalHost();
-            InetSocketAddress name = new InetSocketAddress(localhost, Integer.parseInt(portNumber.getText()));
-            return name;
-        } catch (UnknownHostException e) {
-            System.err.println("Cannot resolve the Internet address of the local host.");
-            System.err.println(e);
-        }
-        return null;
+    public void setKeyOfNameToId(InetSocketAddress name)  {
+        int tmp = name.hashCode()*1073741651 % 2147483647;
+        if (tmp < 0) { tmp = -tmp; }
+        id = tmp;
+        dec.setId(id);
+    }
+
+    public int getId(){
+        return id;
+    }
+
+    public LinkedBlockingQueue getDirectLine(){
+        return directLine;
     }
 
     Action Listen = new AbstractAction("Listen") {
@@ -113,8 +152,13 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
-        Connect.setEnabled(false);
-        InetSocketAddress name = _getMyName();
+        InetSocketAddress name = null;
+        try {
+            name = new InetSocketAddress(InetAddress.getLocalHost(), Integer.parseInt(portNumber.getText()));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        setKeyOfNameToId(name);
 
         chordNameService = new ChordNameServiceImpl(name, this);
         chordNameService.createGroup();
@@ -125,7 +169,6 @@ public class DistributedTextEditor extends JFrame {
             connect();
         }
     };
-
     public void connect(){
         //Prepare editor for connection
         saveOld();
@@ -133,16 +176,12 @@ public class DistributedTextEditor extends JFrame {
         changed = false;
         Save.setEnabled(false);
         SaveAs.setEnabled(false);
-        Listen.setEnabled(false);
-
         //Connect with a listening DistributedTextEditor
         String address = ipaddress.getText();
         int port = Integer.parseInt(portNumber.getText());
         InetSocketAddress knownPeer = new InetSocketAddress(address, port);
 
-        InetSocketAddress name = _getMyName();
-
-        chordNameService = new ChordNameServiceImpl(name, this);
+        chordNameService = new ChordNameServiceImpl(this);
         chordNameService.joinGroup(knownPeer);
     }
 
@@ -206,51 +245,35 @@ public class DistributedTextEditor extends JFrame {
         }
     }
 
-    public void newEventPlayer(Socket socket, int id){
-        if (ep == null) {
-            System.out.println("EP: i am null");
-            ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
+    public void newEventPlayer(Socket socket) {
+            System.out.println("new EP method");
+            ep = new EventPlayer(socket, dec, this, jupiterSynchronizer);
             Thread ept = new Thread(ep);
             ept.start();
-        } else{
-            System.out.println("EP not null");
-            killEventPlayer();
-            ep = new EventPlayer(socket, dec, this, id, jupiterSynchronizer);
-            Thread ept = new Thread(ep);
-            ept.start();
-        }
-        sendAllText();
     }
 
-    public void killEventPlayer(){
-        ep.terminate();
-    }
 
-    public void newEventReplayer(Socket socket, int id){
-        if(er == null) {
-            System.out.println("ERP: i am null");
+    public void newEventReplayer(Socket socket){
+            System.out.println("new ERP method");
             er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
             Thread ert = new Thread(er);
             ert.start();
-        } else {
-            System.out.println("ERP not null");
-            killEventReplayer();
-            er = new EventReplayer(socket, area1, this, jupiterSynchronizer);
-            Thread ert = new Thread(er);
-            ert.start();
-        }
     }
 
-    public void killEventReplayer(){
-        er.terminate();
+    public void sendRipEvent(boolean only2inChord){
+        try {
+            directLine.put(new RipEvent(only2inChord));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void sendAllText(){
-        dec.eventHistory.add(new TextInsertEvent(0, area1.getText()));
-    }
-
-    public int getPort() {
-        return Integer.parseInt(portNumber.getText());
+        try {
+            directLine.put(new AllTextEvent(area1.getText()));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] arg) {

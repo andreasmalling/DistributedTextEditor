@@ -1,7 +1,5 @@
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,24 +13,25 @@ public class ServerThread implements Runnable {
     private Socket joiningSocket;
     private ServerSocket server;
     private ObjectOutputStream outStream;
+    private boolean running;
 
     public ServerThread(DistributedTextEditor dte, ChordNameServiceImpl cns) {
         this.dte = dte;
         this.cns = cns;
-        port = cns.getChordName().getPort();
+        port = cns.getMyName().getPort();
     }
 
     public ServerThread(DistributedTextEditor dte, ChordNameServiceImpl cns, ServerSocket ss) {
         this.dte = dte;
         this.cns = cns;
-        port = cns.getChordName().getPort();
+        port = cns.getMyName().getPort();
         server = ss;
     }
 
     @Override
     public void run() {
-        int myKey = cns.keyOfName(cns.getChordName());
-        dte.setTitle("I'm listening on: " + cns.getChordName().getAddress() + ":" + port);
+        String ipaddress = cns.getMyName().getAddress().getHostAddress();
+        dte.setTitle("I'm listening on: " + ipaddress + ":" + port);
 
         try {
             // First join
@@ -44,13 +43,13 @@ public class ServerThread implements Runnable {
                 System.out.println(TAG + " has one friend");
 
                 cns.setPreSocket(joiningSocket);
-                dte.newEventReplayer(joiningSocket, myKey);
+                dte.newEventReplayer(joiningSocket);
 
                 System.out.println(TAG + " spawns ERP");
 
                 cns.setSucSocket(joiningSocket);
 
-                dte.newEventPlayer(joiningSocket, myKey);
+                dte.newEventPlayer(joiningSocket);
 
                 System.out.println(TAG + " spawns EP");
 
@@ -61,18 +60,20 @@ public class ServerThread implements Runnable {
                 joiningSocket = null;
             }
 
-            while(true) {
+            while(running) {
                 System.out.println("in serverLoop");
                 joiningSocket = server.accept();
 
                 Socket preSocket = cns.getPreSocket();
 
-                outStream = new ObjectOutputStream(new Socket(preSocket.getInetAddress(), port+1).getOutputStream());
+                outStream = new ObjectOutputStream(new Socket(preSocket.getInetAddress(), preSocket.getPort()+1).getOutputStream());
                 System.out.println("Sending disconnectEvent...");
-                outStream.writeObject(new DisconnectEvent(joiningSocket.getInetAddress()));
+
+                InetSocketAddress joiningAddress = new InetSocketAddress(joiningSocket.getInetAddress(), joiningSocket.getPort());
+                outStream.writeObject(new DisconnectEvent(joiningAddress));
                 System.out.println("Sent");
                 cns.setPreSocket(joiningSocket);
-                dte.newEventReplayer(cns.getPreSocket(), myKey);
+                dte.newEventReplayer(cns.getPreSocket());
 
                 joiningSocket = null;
             }
@@ -80,5 +81,8 @@ public class ServerThread implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public void terminate(){
+        running = false;
     }
 }
