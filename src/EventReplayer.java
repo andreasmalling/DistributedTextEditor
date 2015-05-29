@@ -49,6 +49,7 @@ public class EventReplayer implements Runnable {
                                 public void run() {
                                     try {
                                         if(tie.getId()!=dteId){
+                                            System.out.println("ERP INSERT");
                                             area.insert(tie.getText(), tie.getOffset());
                                             directLine.add(tie);
                                         }
@@ -66,6 +67,7 @@ public class EventReplayer implements Runnable {
                                 public void run() {
                                     try {
                                         if(tre.getId()!=dteId) {
+                                            System.out.println("ERP REMOVE");
                                             area.replaceRange(null, tre.getOffset(), tre.getOffset() + tre.getLength());
                                             directLine.add(tre);
                                         }
