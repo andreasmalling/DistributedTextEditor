@@ -28,8 +28,8 @@ public class EventPlayer implements Runnable {
             LinkedBlockingQueue directLine = distributedTextEditor.getDirectLine();
             //Thread that sends on own events
             while (running) {
-               new Thread(new Runnable() {
-                    public void run() {
+               //new Thread(new Runnable() {
+                 //   public void run() {
                         //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                         MyTextEvent ownMTE = null;
                         try {
@@ -41,8 +41,8 @@ public class EventPlayer implements Runnable {
                         } catch (InterruptedException | IOException e) {
                             e.printStackTrace();
                         }
-                    }
-                }).start();
+                   // }
+               // }).start();
                 //Thread that sends all other events
                 //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
                 MyTextEvent otherMTE = null;
