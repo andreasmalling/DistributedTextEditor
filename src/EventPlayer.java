@@ -23,22 +23,42 @@ public class EventPlayer implements Runnable {
         try {
             out = new ObjectOutputStream(socket.getOutputStream());
             System.out.println("EP " + socket.toString());
+            //Thread that sends on own events
             while (running) {
-                //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
-                MyTextEvent ownMTE = dec.take();
-                ownMTE = jupiterSynchronizer.generate(ownMTE);
-                out.writeObject(ownMTE);
-
-                MyTextEvent otherMTE = (MyTextEvent) distributedTextEditor.getDirectLine().take();
-                otherMTE = jupiterSynchronizer.generate(otherMTE);
-                out.writeObject(otherMTE);
-                if(otherMTE instanceof RipEvent){
-                    System.out.println("EP Received RipEvent");
-                    terminate();
-                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
+                        MyTextEvent ownMTE = null;
+                        try {
+                            ownMTE = dec.take();
+                            ownMTE = jupiterSynchronizer.generate(ownMTE);
+                            out.writeObject(ownMTE);
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+                //Thread that sends all other events
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Take every MyTextEvent and send it to the connected DistributedTextEditor's EventReplayer
+                        try {
+                            MyTextEvent otherMTE = (MyTextEvent) distributedTextEditor.getDirectLine().take();
+                            otherMTE = jupiterSynchronizer.generate(otherMTE);
+                            out.writeObject(otherMTE);
+                            if(otherMTE instanceof RipEvent){
+                                System.out.println("EP Received RipEvent");
+                                terminate();
+                            }
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
-            //socket.close();
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException  e) {
             e.printStackTrace();
         }
         System.out.println("I'm the thread running the EventPlayer, now I die!");
